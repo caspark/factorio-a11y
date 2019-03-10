@@ -1,0 +1,14 @@
+{
+    "name": "A11y",
+    "version": "0.1.0",
+    "title": "Ally",
+    "author": "asparck",
+    "contact": "factorio-mods@asparck.com",
+    "homepage": "",
+    "factorio_version": "0.17",
+    "dependencies": [
+        "base >= 0.17",
+        "stdlib >= 1.0.2"
+    ],
+    "description": "Adds accessibility helpers to Factorio to help with hands free playing"
+}
