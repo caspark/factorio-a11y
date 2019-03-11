@@ -69,6 +69,7 @@ Event.register(
     end
 )
 
+-- get an item from inventory by name
 function grab(item_name)
     local ok, stack =
         pcall(
@@ -86,6 +87,24 @@ function grab(item_name)
         end
     else
         game.player.print("No '" .. item_name .. "' found in inventory")
+    end
+end
+
+-- being crafting a given item for a given count
+function start_crafting(opts)
+    setmetatable(opts, {__index = {count = 5}})
+    local item_name = opts.item_name
+    local count_asked = opts.count
+
+    local count_available = game.player.get_craftable_count(item_name)
+    if count_available == 0 then
+        game.player.print("Missing ingredients for crafting any '" .. item_name .. "'")
+    elseif count_available < count_asked then
+        -- we can't craft them all, but craft as many as we can
+        local count_crafting = game.player.begin_crafting {recipe = item_name, count = count_available}
+        game.player.print("Crafting " .. count_available .. " (not " .. count_asked .. ") of '" .. item_name .. "'")
+    else
+        game.player.begin_crafting {recipe = item_name, count = count_asked}
     end
 end
 
