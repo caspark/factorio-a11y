@@ -63,17 +63,6 @@ function render_reach_grid(player)
     )
 end
 
--- it'd be nice to use on_player_changed_position, but that only fires when the player has
--- moved onto a discrete new tile
-Event.register(
-    defines.events.on_tick,
-    function(event)
-        for _, p in pairs(game.players) do
-            render_reach_grid(p)
-        end
-    end
-)
-
 -- get an item from inventory by name
 function grab(item_name)
     local ok, stack =
@@ -113,6 +102,7 @@ function start_crafting(opts)
     end
 end
 
+-- print out the name of the held or selected item
 function what_is_this()
     if game.player.cursor_stack and game.player.cursor_stack.valid_for_read then
         game.player.print("That is " .. q(game.player.cursor_stack.name) .. " (cursor stack)")
@@ -155,3 +145,16 @@ function mine_tile_at_player()
         game.player.print("Not standing on a tile!")
     end
 end
+
+-- ********* Event Handlers *********
+
+-- it'd be nice to use on_player_changed_position, but that only fires when the player has
+-- moved onto a discrete new tile
+Event.register(
+    defines.events.on_tick,
+    function(event)
+        for _, p in pairs(game.players) do
+            render_reach_grid(p)
+        end
+    end
+)
