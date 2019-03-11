@@ -1,14 +1,13 @@
-
-local Area = require('__stdlib__/stdlib/area/area')
-local Entity = require('__stdlib__/stdlib/entity/entity')
-local Event = require('__stdlib__/stdlib/event/event')
-local table = require('__stdlib__/stdlib/utils/table')
-local Game = require('__stdlib__/stdlib/game')
-local Player = require('__stdlib__/stdlib/event/player').register_events()
-local Position = require('__stdlib__/stdlib/area/position')
+local Area = require("__stdlib__/stdlib/area/area")
+local Entity = require("__stdlib__/stdlib/entity/entity")
+local Event = require("__stdlib__/stdlib/event/event")
+local table = require("__stdlib__/stdlib/utils/table")
+local Game = require("__stdlib__/stdlib/game")
+local Player = require("__stdlib__/stdlib/event/player").register_events()
+local Position = require("__stdlib__/stdlib/area/position")
 
 function render_reach_grid(player)
-    local last_player_pos = Game.get_or_set_data('reach_grid', player.index, 'last_player_pos', false, {})
+    local last_player_pos = Game.get_or_set_data("reach_grid", player.index, "last_player_pos", false, {})
     if table.deep_compare(player.position, last_player_pos) then
         -- bail out to avoid rerendering when position has not changed
         return
@@ -18,61 +17,71 @@ function render_reach_grid(player)
         last_player_pos.y = player.position.y
     end
 
-    local color_grid_background = {r=0,g=0,b=0,a=0.4}
+    local color_grid_background = {r = 0, g = 0, b = 0, a = 0.4}
     local max_dist = player.reach_distance
 
     local area = Area.adjust({player.position, player.position}, {max_dist, max_dist})
 
     -- get a reference to the grid table, remove any existing drawings, then save new drawings in it
-    local ui_ids = Game.get_or_set_data('reach_grid', player.index, 'ui_ids', false, {})
+    local ui_ids = Game.get_or_set_data("reach_grid", player.index, "ui_ids", false, {})
     for k, ui_id in pairs(ui_ids) do
         rendering.destroy(ui_id)
         ui_ids[k] = nil
     end
 
     -- draw the grid
-    ui_ids[#ui_ids + 1] = rendering.draw_rectangle {
-        color=color_grid_background,
-        filled=true,
-        left_top={area.left_top.x,area.left_top.y},
-        right_bottom={area.right_bottom.x,area.right_bottom.y},
-        surface=player.surface,
-        draw_on_ground=true,
+    ui_ids[#ui_ids + 1] =
+        rendering.draw_rectangle {
+        color = color_grid_background,
+        filled = true,
+        left_top = {area.left_top.x, area.left_top.y},
+        right_bottom = {area.right_bottom.x, area.right_bottom.y},
+        surface = player.surface,
+        draw_on_ground = true
     }
 
     -- render actual range for comparison
-    ui_ids[#ui_ids + 1] = rendering.draw_circle({
-        color = defines.color.green,
-        radius = max_dist,
-        width = 2,
-        filled = false,
-        target = player.position,
-        target_offset = {0, 0},
-        surface = player.surface,
-        players = {player.index},
-        visible = true,
-        draw_on_ground = true,
-    })
+    ui_ids[#ui_ids + 1] =
+        rendering.draw_circle(
+        {
+            color = defines.color.green,
+            radius = max_dist,
+            width = 2,
+            filled = false,
+            target = player.position,
+            target_offset = {0, 0},
+            surface = player.surface,
+            players = {player.index},
+            visible = true,
+            draw_on_ground = true
+        }
+    )
 end
 
 -- player changed position event only fires when the play has moved onto a discrete new tile
 -- Event.register(defines.events.on_player_changed_position, function(event)
 --     p = Player.get(event.player_index)
 --     render_reach_grid(p)
-
-    -- debugging tricks
-    -- game.player.print(serpent.block(p))
-    -- game.player.print(inspect(p))
 -- end)
 
-Event.register(defines.events.on_tick, function(event)
-    for _, p in pairs(game.players) do
-        render_reach_grid(p)
+-- it'd be nice to use on_player_changed_position, but that only fires when the player has
+-- moved onto a discrete new tile
+Event.register(
+    defines.events.on_tick,
+    function(event)
+        for _, p in pairs(game.players) do
+            render_reach_grid(p)
+        end
     end
-end)
+)
 
 function grab(item_name)
-    local ok, stack = pcall(function() return game.player.get_main_inventory().find_item_stack(item_name) end)
+    local ok, stack =
+        pcall(
+        function()
+            return game.player.get_main_inventory().find_item_stack(item_name)
+        end
+    )
     if ok and stack then
         local stack_count = stack.count
         game.player.clean_cursor()
@@ -95,7 +104,6 @@ function what_is_this()
         game.player.print("No idea what that is :(")
     end
 end
-
 
 -- mine the item under the cursor instantly
 -- (would be nice to do a regular mining action but doesn't seem possible
