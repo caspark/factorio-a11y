@@ -58,12 +58,6 @@ function render_reach_grid(player)
     )
 end
 
--- player changed position event only fires when the play has moved onto a discrete new tile
--- Event.register(defines.events.on_player_changed_position, function(event)
---     p = Player.get(event.player_index)
---     render_reach_grid(p)
--- end)
-
 -- it'd be nice to use on_player_changed_position, but that only fires when the player has
 -- moved onto a discrete new tile
 Event.register(
