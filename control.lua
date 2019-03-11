@@ -11,6 +11,28 @@ function q(s)
     return "'" .. s .. "'"
 end
 
+function get_closest_mineable_resource(player)
+    local resource_reach_area =
+        Area.adjust(
+        {player.position, player.position},
+        {player.resource_reach_distance, player.resource_reach_distance}
+    )
+    local closest_resource = nil
+    local closest_dist = 100000
+    local all_resources =
+        player.surface.find_entities_filtered {area = resource_reach_area, type = {"resource", "tree"}}
+    if all_resources then
+        for k, res in pairs(all_resources) do
+            local d = Position.distance_squared(player.position, res.position)
+            if d < closest_dist and player.can_reach_entity(res) then
+                closest_dist = d
+                closest_resource = res
+            end
+        end
+    end
+    return closest_resource
+end
+
 -- render a UI around the player showing their reach
 function render_reach_grid(player)
     local last_player_pos = Game.get_or_set_data("reach_grid", player.index, "last_player_pos", false, {})
@@ -24,9 +46,13 @@ function render_reach_grid(player)
     end
 
     local color_grid_background = {r = 0, g = 0, b = 0, a = 0.4}
-    local max_dist = player.reach_distance
+    local normal_reach = player.reach_distance
+    local resource_reach = player.resource_reach_distance
 
-    local area = Area.adjust({player.position, player.position}, {max_dist, max_dist})
+    local normal_reach_area = Area.adjust({player.position, player.position}, {normal_reach, normal_reach})
+    local resource_reach_area = Area.adjust({player.position, player.position}, {resource_reach, resource_reach})
+
+    local closest_resource = get_closest_mineable_resource(player)
 
     -- get a reference to the grid table, remove any existing drawings, then save new drawings in it
     local ui_ids = Game.get_or_set_data("reach_grid", player.index, "ui_ids", false, {})
@@ -40,18 +66,54 @@ function render_reach_grid(player)
         rendering.draw_rectangle {
         color = color_grid_background,
         filled = true,
-        left_top = {area.left_top.x, area.left_top.y},
-        right_bottom = {area.right_bottom.x, area.right_bottom.y},
+        left_top = {normal_reach_area.left_top.x, normal_reach_area.left_top.y},
+        right_bottom = {normal_reach_area.right_bottom.x, normal_reach_area.right_bottom.y},
         surface = player.surface,
         draw_on_ground = true
     }
 
-    -- render actual range for comparison
+    -- draw closest resource
+    if closest_resource then
+        ui_ids[#ui_ids + 1] =
+            rendering.draw_circle(
+            {
+                color = defines.color.red,
+                radius = 1,
+                width = 2,
+                filled = false,
+                target = closest_resource.position,
+                target_offset = {0, 0},
+                surface = player.surface,
+                players = {player.index},
+                visible = true,
+                draw_on_ground = true
+            }
+        )
+    end
+
+    -- render mining reach
     ui_ids[#ui_ids + 1] =
         rendering.draw_circle(
         {
             color = defines.color.green,
-            radius = max_dist,
+            radius = resource_reach,
+            width = 2,
+            filled = false,
+            target = player.position,
+            target_offset = {0, 0},
+            surface = player.surface,
+            players = {player.index},
+            visible = true,
+            draw_on_ground = true
+        }
+    )
+
+    -- render normal reach for comparison
+    ui_ids[#ui_ids + 1] =
+        rendering.draw_circle(
+        {
+            color = defines.color.green,
+            radius = normal_reach,
             width = 2,
             filled = false,
             target = player.position,
@@ -122,6 +184,24 @@ function mine_selection()
     local target = game.player.selected
     if not target then
         game.player.print("No cursor selection to mine!")
+        return
+    end
+    local target_name = target.prototype.name
+    if not game.player.can_reach_entity(target) then
+        game.player.print("That " .. q(target_name) .. " is too far away to mine!")
+        return
+    end
+    if game.player.mine_entity(target) then
+        game.player.print("Mined a " .. q(target_name))
+    end
+end
+
+-- mine the resource or tree closest to the player instantly
+-- (again, would be nice to do a regular mining action but doesn't seem possible)
+function mine_here()
+    local target = get_closest_mineable_resource(game.player)
+    if not target then
+        game.player.print("No resource in range to mine!")
         return
     end
     local target_name = target.prototype.name
