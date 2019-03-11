@@ -6,6 +6,11 @@ local Game = require("__stdlib__/stdlib/game")
 local Player = require("__stdlib__/stdlib/event/player").register_events()
 local Position = require("__stdlib__/stdlib/area/position")
 
+-- helper to quote a string in single quotes
+function q(s)
+    return "'" .. s .. "'"
+end
+
 function render_reach_grid(player)
     local last_player_pos = Game.get_or_set_data("reach_grid", player.index, "last_player_pos", false, {})
     if table.deep_compare(player.position, last_player_pos) then
@@ -81,12 +86,12 @@ function grab(item_name)
         local stack_count = stack.count
         game.player.clean_cursor()
         if game.player.cursor_stack.transfer_stack(stack) then
-            game.player.print("Grabbed " .. stack_count .. " of '" .. item_name .. "'")
+            game.player.print("Grabbed " .. stack_count .. " of " .. q(item_name) .. "")
         else
-            game.player.print("We have " .. stack_count .. " of '" .. item_name "' but couldn't grab it :(")
+            game.player.print("We have " .. stack_count .. " of " .. q(item_name) " but couldn't grab it :(")
         end
     else
-        game.player.print("No '" .. item_name .. "' found in inventory")
+        game.player.print("No " .. q(item_name) .. " found in inventory")
     end
 end
 
@@ -98,11 +103,11 @@ function start_crafting(opts)
 
     local count_available = game.player.get_craftable_count(item_name)
     if count_available == 0 then
-        game.player.print("Missing ingredients for crafting any '" .. item_name .. "'")
+        game.player.print("Missing ingredients for crafting any " .. q(item_name))
     elseif count_available < count_asked then
         -- we can't craft them all, but craft as many as we can
         local count_crafting = game.player.begin_crafting {recipe = item_name, count = count_available}
-        game.player.print("Crafting " .. count_available .. " (not " .. count_asked .. ") of '" .. item_name .. "'")
+        game.player.print("Crafting " .. count_available .. " (not " .. count_asked .. ") of " .. q(item_name))
     else
         game.player.begin_crafting {recipe = item_name, count = count_asked}
     end
@@ -110,9 +115,9 @@ end
 
 function what_is_this()
     if game.player.cursor_stack and game.player.cursor_stack.valid_for_read then
-        game.player.print("That is '" .. game.player.cursor_stack.name .. "' (cursor stack)")
+        game.player.print("That is " .. q(game.player.cursor_stack.name) .. " (cursor stack)")
     elseif game.player.selected then
-        game.player.print("That is '" .. game.player.selected.name .. "' (selected)")
+        game.player.print("That is " .. q(game.player.selected.name) .. " (selected)")
     else
         game.player.print("No idea what that is :(")
     end
@@ -123,14 +128,18 @@ end
 -- without locking cursor into place and hold right click, which is very
 -- annoying when using eye tracking!)
 function mine_selection()
-    local to_mine = game.player.selected
-    if to_mine then
-        local to_mine_name = to_mine.prototype.name
-        if game.player.mine_entity(to_mine) then
-            game.player.print("Mined a " .. to_mine_name)
-        end
-    else
+    local target = game.player.selected
+    if not target then
         game.player.print("No cursor selection to mine!")
+        return
+    end
+    local target_name = target.prototype.name
+    if not game.player.can_reach_entity(target) then
+        game.player.print("That " .. q(target_name) .. " is too far away to mine!")
+        return
+    end
+    if game.player.mine_entity(target) then
+        game.player.print("Mined a " .. q(target_name))
     end
 end
 
