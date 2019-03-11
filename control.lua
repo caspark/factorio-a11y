@@ -11,6 +11,7 @@ function q(s)
     return "'" .. s .. "'"
 end
 
+-- render a UI around the player showing their reach
 function render_reach_grid(player)
     local last_player_pos = Game.get_or_set_data("reach_grid", player.index, "last_player_pos", false, {})
     if table.deep_compare(player.position, last_player_pos) then
