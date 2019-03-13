@@ -33,16 +33,23 @@ function get_closest_mineable_resource(player)
     return closest_resource
 end
 
+function request_ui_rerender(player)
+    Game.get_or_set_data("ui", player.index, "force_rerender", true, true)
+end
+
 -- render a UI around the player showing their reach
 function render_ui(player)
-    local last_player_pos = Game.get_or_set_data("reach_grid", player.index, "last_player_pos", false, {})
-    if table.deep_compare(player.position, last_player_pos) then
+    local ui_last_player_pos = Game.get_or_set_data("ui", player.index, "last_player_pos", false, {x = nil, y = nil})
+    local ui_force_rerender = Game.get_or_set_data("ui", player.index, "force_rerender", false, false)
+    if player.position.x == ui_last_player_pos.x and player.position.y == ui_last_player_pos.y and not ui_force_rerender then
         -- bail out to avoid rerendering when position has not changed
         return
     else
         -- update position to avoid unnecessary work next time
-        last_player_pos.x = player.position.x
-        last_player_pos.y = player.position.y
+        ui_last_player_pos.x = player.position.x
+        ui_last_player_pos.y = player.position.y
+        -- and flush rerender flag
+        Game.get_or_set_data("ui", player.index, "force_rerender", true, false)
     end
 
     local color_grid_background = {r = 0, g = 0, b = 0, a = 0.4}
@@ -55,7 +62,7 @@ function render_ui(player)
     local closest_resource = get_closest_mineable_resource(player)
 
     -- get a reference to the grid table, remove any existing drawings, then save new drawings in it
-    local ui_ids = Game.get_or_set_data("reach_grid", player.index, "ui_ids", false, {})
+    local ui_ids = Game.get_or_set_data("ui", player.index, "ui_ids", false, {})
     for k, ui_id in pairs(ui_ids) do
         rendering.destroy(ui_id)
         ui_ids[k] = nil
@@ -128,22 +135,26 @@ function render_ui(player)
     -- render last provided path
     local waypoints = Game.get_or_set_data("pathfinder", player.index, "path_to_follow", false, nil)
     if waypoints then
+        local progress =
+            Game.get_or_set_data("pathfinder", player.index, "path_progress", false, {waypoint = 0, dist = nil})
         for i, waypoint in ipairs(waypoints) do
-            ui_ids[#ui_ids + 1] =
-                rendering.draw_circle(
-                {
-                    color = defines.color.lightblue,
-                    radius = 0.5,
-                    width = 2,
-                    filled = false,
-                    target = waypoint.position,
-                    target_offset = {0, 0},
-                    surface = player.surface,
-                    players = {player.index},
-                    visible = true,
-                    draw_on_ground = true
-                }
-            )
+            if i >= progress.waypoint then
+                ui_ids[#ui_ids + 1] =
+                    rendering.draw_circle(
+                    {
+                        color = defines.color.lightblue,
+                        radius = 0.2,
+                        width = 2,
+                        filled = false,
+                        target = waypoint.position,
+                        target_offset = {0, 0},
+                        surface = player.surface,
+                        players = {player.index},
+                        visible = true,
+                        draw_on_ground = true
+                    }
+                )
+            end
         end
     end
 end
@@ -166,6 +177,7 @@ function try_move_player_along_path(player)
 
     if not curr_waypoint or not next_waypoint then
         -- done pathfinding, clear the path to follow
+        request_ui_rerender(player)
         Game.get_or_set_data("pathfinder", player.index, "path_to_follow", true, nil)
         Game.get_or_set_data("pathfinder", player.index, "path_progress", true, nil)
         return
