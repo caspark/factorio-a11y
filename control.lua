@@ -34,7 +34,7 @@ function get_closest_mineable_resource(player)
 end
 
 -- render a UI around the player showing their reach
-function render_reach_grid(player)
+function render_ui(player)
     local last_player_pos = Game.get_or_set_data("reach_grid", player.index, "last_player_pos", false, {})
     if table.deep_compare(player.position, last_player_pos) then
         -- bail out to avoid rerendering when position has not changed
@@ -124,6 +124,67 @@ function render_reach_grid(player)
             draw_on_ground = true
         }
     )
+
+    -- render last provided path
+    local waypoints = Game.get_or_set_data("pathfinder", player.index, "path_to_follow", false, nil)
+    if waypoints then
+        for i, waypoint in ipairs(waypoints) do
+            ui_ids[#ui_ids + 1] =
+                rendering.draw_circle(
+                {
+                    color = defines.color.lightblue,
+                    radius = 0.5,
+                    width = 2,
+                    filled = false,
+                    target = waypoint.position,
+                    target_offset = {0, 0},
+                    surface = player.surface,
+                    players = {player.index},
+                    visible = true,
+                    draw_on_ground = true
+                }
+            )
+        end
+    end
+end
+
+function try_move_player_along_path(player)
+    local path = Game.get_or_set_data("pathfinder", player.index, "path_to_follow", false, nil)
+    if not path then
+        return
+    end
+
+    local first_waypoint = path[0]
+    if not first_waypoint then
+        player.print("Found a path but it doesn't have a 0th waypoint!")
+        return
+    end
+    local progress =
+        Game.get_or_set_data("pathfinder", player.index, "path_progress", false, {waypoint = 0, dist = nil})
+    local curr_waypoint = path[progress.waypoint]
+    local next_waypoint = path[progress.waypoint + 1]
+
+    if not curr_waypoint or not next_waypoint then
+        -- done pathfinding, clear the path to follow
+        Game.get_or_set_data("pathfinder", player.index, "path_to_follow", true, nil)
+        Game.get_or_set_data("pathfinder", player.index, "path_progress", true, nil)
+        return
+    end
+    if progress.dist_remaining == nil then
+        -- new waypoint, stash how much distance we need to move
+        progress.dist_remaining = Position.distance(curr_waypoint.position, next_waypoint.position)
+    end
+    -- move the player along the path
+    progress.dist_remaining = progress.dist_remaining - player.character_running_speed
+    -- local new_player_pos = Position.lerp(curr_waypoint.position, next_waypoint.position, progress.dist_remaining)
+    local new_player_pos =
+        Position.offset_along_line(curr_waypoint.position, next_waypoint.position, progress.dist_remaining)
+    player.teleport(new_player_pos)
+    if progress.dist_remaining <= 0 then
+        -- move on to the next waypoint
+        progress.dist_remaining = nil
+        progress.waypoint = progress.waypoint + 1
+    end
 end
 
 -- get an item from inventory by name
@@ -227,6 +288,51 @@ function mine_tile_at_player()
     end
 end
 
+function move_to_selection()
+    local player = game.player
+    local target = player.selected
+    if not target then
+        player.print("No cursor selection to move to!")
+        return
+    end
+
+    -- we can't path from the player's exact position, presumably because the player is an obstacle itself
+    -- so instead we find a position near the player which we can path from
+    local start_pos =
+        player.surface.find_non_colliding_position(
+        -- FIXME it'd be better to use something that's exactly the size of the player's bounding box (0.4x0.4)
+        "wooden-chest", -- prototype name
+        player.position, -- center
+        .7, -- radius
+        0.01, -- precision for search (step size)
+        false -- force_to_tile_center
+    )
+    local path_id =
+        player.surface.request_path {
+        bounding_box = {{-0.2, -0.2}, {0.2, 0.2}}, -- player's collision box according to data.raw
+        collision_mask = {"player-layer", "item-layer", "object-layer", "water-tile"},
+        start = start_pos,
+        goal = target.position,
+        force = player.force,
+        -- FIXME we need to adjust the radius based on the size of the entity, so that we can run to big
+        --       OR, change the running to be done via a selection tool
+        radius = 1.2, -- how close to get
+        pathfind_flags = {
+            allow_destroy_friendly_entities = false,
+            cache = false,
+            prefer_straight_paths = true,
+            low_priority = false
+        },
+        can_open_gates = true,
+        path_resolution_modifier = 1
+    }
+    player.print(
+        "Issued pathfinding request to " ..
+            target.position.x .. "," .. target.position.y .. " (request-id: " .. path_id .. ")"
+    )
+    Game.get_or_set_data("pathfinder", player.index, "last_path_id", true, path_id)
+end
+
 -- ********* Event Handlers *********
 
 -- it'd be nice to use on_player_changed_position, but that only fires when the player has
@@ -234,8 +340,36 @@ end
 Event.register(
     defines.events.on_tick,
     function(event)
-        for _, p in pairs(game.players) do
-            render_reach_grid(p)
+        for _, player in pairs(game.players) do
+            try_move_player_along_path(player)
+            render_ui(player)
+        end
+    end
+)
+Event.register(
+    defines.events.on_script_path_request_finished,
+    function(event, dog)
+        local path_id = event.id
+        for _, player in pairs(game.players) do
+            if path_id == Game.get_or_set_data("pathfinder", player.index, "last_path_id", true, path_id) then
+                if event.try_again_later then
+                    player.print("Pathfinder was too busy - got try again later result for pathfinding")
+                else
+                    -- player.print("Got paths of " .. serpent.block(event))
+                    if event.path then
+                        -- update the path to have a 0th waypoint which is the player's current position
+                        -- (necessary to avoid a jerk at the start of pathing since the path needs to
+                        -- start outside the player's collision box)
+                        event.path[0] = {position = player.position, needs_destroy_to_reach = false}
+
+                        player.print("Found path with " .. #event.path .. " waypoints (request-id: " .. event.id .. ")")
+                    else
+                        player.print("Failed to find path (request-id: " .. event.id .. ")")
+                    end
+
+                    Game.get_or_set_data("pathfinder", player.index, "path_to_follow", true, event.path)
+                end
+            end
         end
     end
 )
