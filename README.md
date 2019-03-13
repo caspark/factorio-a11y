@@ -31,7 +31,7 @@ Commands are provided to:
 Todo list
 ---------
 
-* Running to a location does not take into account the size of the entity you are running to
+* Sufficiently high speed players don't run at max speed due to how we're tracking progress along the path found
 * Running to a location is only possible if there is an entity under the cursor - maybe a selection tool needs to be introduced to be able to run to anywhere?
 * Mining resources and buildings should take some time - implement the mining hardness formula for this based on the FF post.
 * Commands that don't require input should be triggerable via a hotkey (or a chord) to prevent having to send console commands to trigger every command.

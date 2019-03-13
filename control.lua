@@ -194,6 +194,9 @@ function try_move_player_along_path(player)
     player.teleport(new_player_pos)
     if progress.dist_remaining <= 0 then
         -- move on to the next waypoint
+        -- FIXME for sufficiently high player speeds or fine grained paths, this resetting results in "losing" part
+        --       of your progress towards the next waypoint so what we should really do is keep going to further
+        --       waypoints and decrementing dist_remaining until dist_remaining reaches zero (or we run out of waypoints)
         progress.dist_remaining = nil
         progress.waypoint = progress.waypoint + 1
     end
