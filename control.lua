@@ -307,16 +307,39 @@ function move_to_selection()
         0.01, -- precision for search (step size)
         false -- force_to_tile_center
     )
+
+    local how_close = 0
+    if target.prototype.collision_mask["player-layer"] then
+        -- since this target can collide with the player, we need to figure out its edges and use
+        -- that to modify how close we try to get
+        local target_box = target.prototype.collision_box
+
+        local left_top = target_box.left_top
+        local right_top = {x = target_box.right_bottom.x, y = target_box.left_top.y}
+        local right_bottom = target_box.right_bottom
+        local left_bottom = {x = target_box.left_top.x, y = target_box.right_bottom.y}
+        local corners = {left_top, right_top, right_bottom, left_bottom}
+        local furthest_corner = nil
+        local furthest_corner_dist = nil
+        for _, corner in pairs(corners) do
+            local dist = Position.distance({x = 0.0, y = 0.0}, corner)
+            if furthest_corner == nil or furthest_corner_dist < dist then
+                furthest_corner = corner
+                furthest_corner_dist = dist
+            end
+        end
+        how_close = furthest_corner_dist + .2
+        player.print("Closeness " .. serpent.block(furthest_corner_dist))
+    end
+
     local path_id =
         player.surface.request_path {
         bounding_box = {{-0.2, -0.2}, {0.2, 0.2}}, -- player's collision box according to data.raw
-        collision_mask = {"player-layer", "item-layer", "object-layer", "water-tile"},
+        collision_mask = {"player-layer"},
         start = start_pos,
         goal = target.position,
         force = player.force,
-        -- FIXME we need to adjust the radius based on the size of the entity, so that we can run to big
-        --       OR, change the running to be done via a selection tool
-        radius = 1.2, -- how close to get
+        radius = how_close,
         pathfind_flags = {
             allow_destroy_friendly_entities = false,
             cache = false,
@@ -361,10 +384,8 @@ Event.register(
                         -- (necessary to avoid a jerk at the start of pathing since the path needs to
                         -- start outside the player's collision box)
                         event.path[0] = {position = player.position, needs_destroy_to_reach = false}
-
-                        player.print("Found path with " .. #event.path .. " waypoints (request-id: " .. event.id .. ")")
                     else
-                        player.print("Failed to find path (request-id: " .. event.id .. ")")
+                        player.print("Failed to find path!")
                     end
 
                     Game.get_or_set_data("pathfinder", player.index, "path_to_follow", true, event.path)
