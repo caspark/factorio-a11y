@@ -308,6 +308,8 @@ function mine_tile_under_player(player)
 end
 
 function run_to_selection(player)
+    stop_moving_player_along_path(player)
+
     local target = player.selected
     if not target then
         player.print("No cursor selection to move to!")
