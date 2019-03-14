@@ -28,6 +28,8 @@ Commands are provided to:
 * craft items by name without opening the inventory (e.g. you could say "craft eleven stone furnace")
 * print out the name of the item being held or under your cursor (useful for crafting or grabbing items by name)
 
+If you're looking at this mod, you should probably also read [Tutorial:Keyboard shortcuts](https://wiki.factorio.com/Tutorial:Keyboard_shortcuts) and [TIL all the keyboard shortcuts](https://www.reddit.com/r/factorio/comments/5odbdf/til_all_the_keyboard_shortcuts/).
+
 Todo list
 ---------
 
