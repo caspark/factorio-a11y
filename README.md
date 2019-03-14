@@ -15,13 +15,13 @@ This mod exposes a number of hot keys to provide alternate control schemes. For 
 * Mine closest resource in range of character - <kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>E</kbd>
 * etc
 
-It also exposes more complex functions, which an accessibility-impaired user can call by using Factorio 0.17's mechanism to call functions in mods using syntax like this:
+It also exposes more complex functions, which an accessibility-impaired user can call from the console:
 
 ```
 /sc __A11y__ grab(game.player, 'iron-plate') -- grabs iron plates from the player's inventory
 ```
 
-(The intended way to use call these functions is to use voice recognition software - see *Relevant Software* heading below - to turn voice commands into text shortcuts.)
+(The intended way to call these functions is to use voice recognition software - see *Relevant Software* heading below - to turn voice commands into text shortcuts which type them in.)
 
 With enough work, it may eventually be possible to play Factorio with no hands at all.
 
