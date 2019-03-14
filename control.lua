@@ -159,6 +159,12 @@ function render_ui(player)
     end
 end
 
+function stop_moving_player_along_path(player)
+    request_ui_rerender(player)
+    Game.get_or_set_data("pathfinder", player.index, "path_to_follow", true, nil)
+    Game.get_or_set_data("pathfinder", player.index, "path_progress", true, nil)
+end
+
 function try_move_player_along_path(player)
     local path = Game.get_or_set_data("pathfinder", player.index, "path_to_follow", false, nil)
     if not path then
@@ -177,9 +183,7 @@ function try_move_player_along_path(player)
 
     if not curr_waypoint or not next_waypoint then
         -- done pathfinding, clear the path to follow
-        request_ui_rerender(player)
-        Game.get_or_set_data("pathfinder", player.index, "path_to_follow", true, nil)
-        Game.get_or_set_data("pathfinder", player.index, "path_progress", true, nil)
+        stop_moving_player_along_path(player)
         return
     end
     if progress.dist_remaining == nil then
@@ -343,7 +347,7 @@ function move_to_selection()
                 furthest_corner_dist = dist
             end
         end
-        how_close = furthest_corner_dist + .2
+        how_close = furthest_corner_dist + .3
         player.print("Closeness " .. serpent.block(furthest_corner_dist))
     end
 
@@ -407,5 +411,17 @@ Event.register(
                 end
             end
         end
+    end
+)
+
+Event.register(
+    {
+        "a11y-hook-player-walked-up",
+        "a11y-hook-player-walked-right",
+        "a11y-hook-player-walked-down",
+        "a11y-hook-player-walked-left"
+    },
+    function(event)
+        stop_moving_player_along_path(game.players[event.player_index])
     end
 )
