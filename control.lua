@@ -207,52 +207,52 @@ function try_move_player_along_path(player)
 end
 
 -- get an item from inventory by name
-function grab(item_name)
+function grab(player, item_name)
     local ok, stack =
         pcall(
         function()
-            return game.player.get_main_inventory().find_item_stack(item_name)
+            return player.get_main_inventory().find_item_stack(item_name)
         end
     )
     if ok and stack then
         local stack_count = stack.count
-        game.player.clean_cursor()
-        if game.player.cursor_stack.transfer_stack(stack) then
-            game.player.print("Grabbed " .. stack_count .. " of " .. q(item_name) .. "")
+        player.clean_cursor()
+        if player.cursor_stack.transfer_stack(stack) then
+            player.print("Grabbed " .. stack_count .. " of " .. q(item_name) .. "")
         else
-            game.player.print("We have " .. stack_count .. " of " .. q(item_name) " but couldn't grab it :(")
+            player.print("We have " .. stack_count .. " of " .. q(item_name) " but couldn't grab it :(")
         end
     else
-        game.player.print("No " .. q(item_name) .. " found in inventory")
+        player.print("No " .. q(item_name) .. " found in inventory")
     end
 end
 
 -- being crafting a given item for a given count
-function start_crafting(opts)
+function start_crafting(player, opts)
     setmetatable(opts, {__index = {count = 5}})
     local item_name = opts.item_name
     local count_asked = opts.count
 
-    local count_available = game.player.get_craftable_count(item_name)
+    local count_available = player.get_craftable_count(item_name)
     if count_available == 0 then
-        game.player.print("Missing ingredients for crafting any " .. q(item_name))
+        player.print("Missing ingredients for crafting any " .. q(item_name))
     elseif count_available < count_asked then
         -- we can't craft them all, but craft as many as we can
-        local count_crafting = game.player.begin_crafting {recipe = item_name, count = count_available}
-        game.player.print("Crafting " .. count_available .. " (not " .. count_asked .. ") of " .. q(item_name))
+        local count_crafting = player.begin_crafting {recipe = item_name, count = count_available}
+        player.print("Crafting " .. count_available .. " (not " .. count_asked .. ") of " .. q(item_name))
     else
-        game.player.begin_crafting {recipe = item_name, count = count_asked}
+        player.begin_crafting {recipe = item_name, count = count_asked}
     end
 end
 
 -- print out the name of the held or selected item
-function what_is_this()
-    if game.player.cursor_stack and game.player.cursor_stack.valid_for_read then
-        game.player.print("That is " .. q(game.player.cursor_stack.name) .. " (cursor stack)")
-    elseif game.player.selected then
-        game.player.print("That is " .. q(game.player.selected.name) .. " (selected)")
+function explain_selection(player)
+    if player.cursor_stack and player.cursor_stack.valid_for_read then
+        player.print("That is " .. q(player.cursor_stack.name) .. " (cursor stack)")
+    elseif player.selected then
+        player.print("That is " .. q(player.selected.name) .. " (selected)")
     else
-        game.player.print("No idea what that is :(")
+        player.print("No idea what that is :(")
     end
 end
 
@@ -260,55 +260,54 @@ end
 -- (would be nice to do a regular mining action but doesn't seem possible
 -- without locking cursor into place and hold right click, which is very
 -- annoying when using eye tracking!)
-function mine_selection()
-    local target = game.player.selected
+function mine_selection(player)
+    local target = player.selected
     if not target then
-        game.player.print("No cursor selection to mine!")
+        player.print("No cursor selection to mine!")
         return
     end
     local target_name = target.prototype.name
-    if not game.player.can_reach_entity(target) then
-        game.player.print("That " .. q(target_name) .. " is too far away to mine!")
+    if not player.can_reach_entity(target) then
+        player.print("That " .. q(target_name) .. " is too far away to mine!")
         return
     end
-    if game.player.mine_entity(target) then
-        game.player.print("Mined a " .. q(target_name))
+    if player.mine_entity(target) then
+        player.print("Mined a " .. q(target_name))
     end
 end
 
 -- mine the resource or tree closest to the player instantly
 -- (again, would be nice to do a regular mining action but doesn't seem possible)
-function mine_here()
-    local target = get_closest_mineable_resource(game.player)
+function mine_closest_resource(player)
+    local target = get_closest_mineable_resource(player)
     if not target then
-        game.player.print("No resource in range to mine!")
+        player.print("No resource in range to mine!")
         return
     end
     local target_name = target.prototype.name
-    if not game.player.can_reach_entity(target) then
-        game.player.print("That " .. q(target_name) .. " is too far away to mine!")
+    if not player.can_reach_entity(target) then
+        player.print("That " .. q(target_name) .. " is too far away to mine!")
         return
     end
-    if game.player.mine_entity(target) then
-        game.player.print("Mined a " .. q(target_name))
+    if player.mine_entity(target) then
+        player.print("Mined a " .. q(target_name))
     end
 end
 
 -- mine the tile which the player is standing on
-function mine_tile_at_player()
-    local to_mine = game.player.surface.get_tile(game.player.position)
+function mine_tile_under_player(player)
+    local to_mine = player.surface.get_tile(player.position)
     if to_mine then
         local to_mine_name = to_mine.prototype.name
-        if game.player.mine_tile(to_mine) then
-            game.player.print("Mined a " .. to_mine_name)
+        if player.mine_tile(to_mine) then
+            player.print("Mined a " .. to_mine_name)
         end
     else
-        game.player.print("Not standing on a tile!")
+        player.print("Not standing on a tile!")
     end
 end
 
-function move_to_selection()
-    local player = game.player
+function run_to_selection(player)
     local target = player.selected
     if not target then
         player.print("No cursor selection to move to!")
@@ -423,5 +422,20 @@ Event.register(
     },
     function(event)
         stop_moving_player_along_path(game.players[event.player_index])
+    end
+)
+
+-- simple hotkey mappings
+local hotkey_actions = {
+    ["a11y-hotkey-run-to-selection"] = run_to_selection,
+    ["a11y-hotkey-explain-selection"] = explain_selection,
+    ["a11y-hotkey-mine-selection"] = mine_selection,
+    ["a11y-hotkey-mine-closest-resouce"] = mine_closest_resource,
+    ["a11y-hotkey-mine-tile-under-player"] = mine_tile_under_player
+}
+Event.register(
+    table.keys(hotkey_actions),
+    function(event)
+        hotkey_actions[event.input_name](game.players[event.player_index])
     end
 )

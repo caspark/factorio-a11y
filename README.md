@@ -12,7 +12,7 @@ How does it work?
 This mod exposes a number of functions, which an accessibility-impaired user can call by using Factorio 0.17's mechanism to call functions in mods using syntax like this:
 
 ```
-/sc __A11y__ what_is_this() -- this prints out the name of the item the mouse cursor is holding or hovering over
+/sc __A11y__ what_is_this(game.player) -- this prints out the name of the item the mouse cursor is holding or hovering over
 ```
 
 The intended way to use call these functions is to use voice recognition software to turn voice commands into text shortcuts - for example, using [Dragonfly](https://github.com/dictation-toolbox/dragonfly), [Vocola](http://vocola.net/), or [Talon](https://talonvoice.com/) - while using either a mouse-alternative (e.g. trackball or [controller/joystick with JoyToKey](https://joytokey.net/en/) or [controller/joystick with Gopher360](https://github.com/Tylemagne/Gopher360)) if physically able or low cost head/eye-tracking equipment (using e.g. [eViacam](http://eviacam.crea-si.com/index.php) or [Precision-Gaze](https://precisiongazemouse.com/) or [Talon](https://talonvoice.com/)) if not. With enough work, it may eventually be possible to play Factorio with no hands at all.
@@ -33,6 +33,8 @@ If you're looking at this mod, you should probably also read [Tutorial:Keyboard 
 Todo list
 ---------
 
+* mine closest resource is ignoring rocks but shouldn't
+* should be able to mine tile under cursor (needs selection tool probably?)
 * Sufficiently high speed players don't run at max speed due to how we're tracking progress along the path found
 * Running to a location is only possible if there is an entity under the cursor - maybe a selection tool needs to be introduced to be able to run to anywhere?
 * Mining resources and buildings should take some time - implement the mining hardness formula for this based on the FF post.
