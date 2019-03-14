@@ -427,8 +427,8 @@ Event.register(
 
 -- simple hotkey mappings
 local hotkey_actions = {
-    ["a11y-hotkey-run-to-selection"] = run_to_selection,
     ["a11y-hotkey-explain-selection"] = explain_selection,
+    ["a11y-hotkey-run-to-selection"] = run_to_selection,
     ["a11y-hotkey-mine-selection"] = mine_selection,
     ["a11y-hotkey-mine-closest-resouce"] = mine_closest_resource,
     ["a11y-hotkey-mine-tile-under-player"] = mine_tile_under_player

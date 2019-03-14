@@ -9,13 +9,21 @@ Generally speaking, this mod aims to preserve existing gameplay mechanics - e.g.
 How does it work?
 -----------------
 
-This mod exposes a number of functions, which an accessibility-impaired user can call by using Factorio 0.17's mechanism to call functions in mods using syntax like this:
+This mod exposes a number of hot keys to provide alternate control schemes. For example:
+
+* Run character to cursor - <kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd>
+* Mine closest resource in range of character - <kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>E</kbd>
+* etc
+
+It also exposes more complex functions, which an accessibility-impaired user can call by using Factorio 0.17's mechanism to call functions in mods using syntax like this:
 
 ```
-/sc __A11y__ what_is_this(game.player) -- this prints out the name of the item the mouse cursor is holding or hovering over
+/sc __A11y__ grab(game.player, 'iron-plate') -- grabs iron plates from the player's inventory
 ```
 
-The intended way to use call these functions is to use voice recognition software to turn voice commands into text shortcuts - for example, using [Dragonfly](https://github.com/dictation-toolbox/dragonfly), [Vocola](http://vocola.net/), or [Talon](https://talonvoice.com/) - while using either a mouse-alternative (e.g. trackball or [controller/joystick with JoyToKey](https://joytokey.net/en/) or [controller/joystick with Gopher360](https://github.com/Tylemagne/Gopher360)) if physically able or low cost head/eye-tracking equipment (using e.g. [eViacam](http://eviacam.crea-si.com/index.php) or [Precision-Gaze](https://precisiongazemouse.com/) or [Talon](https://talonvoice.com/)) if not. With enough work, it may eventually be possible to play Factorio with no hands at all.
+(The intended way to use call these functions is to use voice recognition software - see *Relevant Software* heading below - to turn voice commands into text shortcuts.)
+
+With enough work, it may eventually be possible to play Factorio with no hands at all.
 
 Features
 --------
@@ -28,7 +36,7 @@ Commands are provided to:
 * craft items by name without opening the inventory (e.g. you could say "craft eleven stone furnace")
 * print out the name of the item being held or under your cursor (useful for crafting or grabbing items by name)
 
-If you're looking at this mod, you should probably also read [Tutorial:Keyboard shortcuts](https://wiki.factorio.com/Tutorial:Keyboard_shortcuts) and [TIL all the keyboard shortcuts](https://www.reddit.com/r/factorio/comments/5odbdf/til_all_the_keyboard_shortcuts/).
+Oh, if you're looking at this mod, you should probably also read [Tutorial:Keyboard shortcuts](https://wiki.factorio.com/Tutorial:Keyboard_shortcuts) and [TIL all the keyboard shortcuts](https://www.reddit.com/r/factorio/comments/5odbdf/til_all_the_keyboard_shortcuts/), as this mod assumes that you know and use these existing tricks.
 
 Todo list
 ---------
@@ -40,6 +48,30 @@ Todo list
 * Mining resources and buildings should take some time - implement the mining hardness formula for this based on the FF post.
 * Commands that don't require input should be triggerable via a hotkey (or a chord) to prevent having to send console commands to trigger every command.
 * Commands that do require input should probably have a hotkey to accept a text box for input.
+
+
+Relevant Software
+-----------------
+
+### Mouse Alternatives
+
+Aside from relatively obvious options like vertical mice, graphics tablet pens and trackballs, the next easiest options to use are any controllers or joysticks you have lying around; remap them to send keypresses and/or mouse movements/clicks with [JoyToKey](https://joytokey.net/en/) or [Gopher360](https://github.com/Tylemagne/Gopher360).
+
+### Mouse replacements
+
+If you can't use a mouse, you can look into these options:
+
+* [eViacam](http://eviacam.crea-si.com/index.php) (free, open source, Windows/Linux) uses commodity webcams to control the cursor by tracking your face so that the cursor moves when your head moves
+* [Precision-Gaze](https://precisiongazemouse.com/) (free, open source, Windows) is better, but requires you to buy eye or head tracking hardware (usually available for < 200 USD).
+* [Talon](https://talonvoice.com/) (free, MacOS) requires you to buy eye tracking hardware (usually available for < 200 USD), but is probably the most advanced option available (also supports making mouth noises to click).
+
+### Voice Control Software
+
+Voice control software is useful for simulating clicks, keypresses, and typing; as of early 2019, the main options available are:
+
+* [Dragonfly](https://github.com/dictation-toolbox/dragonfly) (Windows, some Linux support too) - supports Windows Speech Recognition, Dragon Naturally Speaking 13 or higher, or (experimentally) the open source Sphinx speech recognition system.
+* [Vocola](http://vocola.net/) (Windows) - requires Dragon Naturally Speaking 13 or higher.
+* [Talon](https://talonvoice.com/) (MacOS) - has a built in speech recognition engine, but can make use of Dragon Naturally Speaking 6.
 
 Scratchpad
 ----------
