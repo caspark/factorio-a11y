@@ -327,6 +327,10 @@ function run_to_selection(player)
         0.01, -- precision for search (step size)
         false -- force_to_tile_center
     )
+    if not start_pos then
+        player.print("No valid starting position for path!")
+        return
+    end
 
     local how_close = 0
     if target.prototype.collision_mask["player-layer"] then
