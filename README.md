@@ -41,7 +41,8 @@ Oh, if you're looking at this mod, you should probably also read [Tutorial:Keybo
 Todo list
 ---------
 
-* mine closest resource is ignoring rocks but shouldn't
+* oil is not mineable, so should be filtered out from the mining UI. Is there a generic API for detecting non-mineable objects?
+* mining a item should refresh the UI
 * should be able to mine tile under cursor (needs selection tool probably?)
 * Sufficiently high speed players don't run at max speed due to how we're tracking progress along the path found
 * Running to a location is only possible if there is an entity under the cursor - maybe a selection tool needs to be introduced to be able to run to anywhere?

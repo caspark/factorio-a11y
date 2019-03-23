@@ -20,7 +20,7 @@ function get_closest_mineable_resource(player)
     local closest_resource = nil
     local closest_dist = 100000
     local all_resources =
-        player.surface.find_entities_filtered {area = resource_reach_area, type = {"resource", "tree"}}
+        player.surface.find_entities_filtered {area = resource_reach_area, type = {"resource", "tree", "simple-entity"}}
     if all_resources then
         for k, res in pairs(all_resources) do
             local d = Position.distance_squared(player.position, res.position)
