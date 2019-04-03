@@ -2,27 +2,27 @@ data:extend(
     {
         {
             type = "custom-input",
-            name = "a11y-hotkey-explain-selection",
+            name = "hotkey-explain-selection",
             key_sequence = "SHIFT + ALT + W"
         },
         {
             type = "custom-input",
-            name = "a11y-hotkey-run-to-selection",
+            name = "hotkey-get-runtool",
             key_sequence = "SHIFT + ALT + R"
         },
         {
             type = "custom-input",
-            name = "a11y-hotkey-mine-selection",
-            key_sequence = "SHIFT + ALT + M"
-        },
-        {
-            type = "custom-input",
-            name = "a11y-hotkey-mine-closest-resouce",
+            name = "hotkey-mine-closest-resouce",
             key_sequence = "SHIFT + ALT + E"
         },
         {
             type = "custom-input",
-            name = "a11y-hotkey-mine-tile-under-player",
+            name = "hotkey-mine-selection",
+            key_sequence = "SHIFT + ALT + M"
+        },
+        {
+            type = "custom-input",
+            name = "hotkey-mine-tile-under-player",
             key_sequence = "SHIFT + ALT + T"
         }
     }

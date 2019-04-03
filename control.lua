@@ -1,10 +1,12 @@
 local Area = require("__stdlib__/stdlib/area/area")
 local Entity = require("__stdlib__/stdlib/entity/entity")
 local Event = require("__stdlib__/stdlib/event/event")
-local table = require("__stdlib__/stdlib/utils/table")
 local Game = require("__stdlib__/stdlib/game")
+local Is = require("__stdlib__/stdlib/utils/is")
+local Logger = require("__stdlib__/stdlib/misc/logger").new("A11y", "A11y_Debug", true)
 local Player = require("__stdlib__/stdlib/event/player").register_events()
 local Position = require("__stdlib__/stdlib/area/position")
+local table = require("__stdlib__/stdlib/utils/table")
 
 -- helper to quote a string in single quotes
 function q(s)
@@ -307,14 +309,34 @@ function mine_tile_under_player(player)
     end
 end
 
-function run_to_selection(player)
-    stop_moving_player_along_path(player)
-
-    local target = player.selected
-    if not target then
-        player.print("No cursor selection to move to!")
-        return
+function grab_runtool(player)
+    if player.clean_cursor() then
+        player.cursor_stack.set_stack({name = "runtool"})
     end
+end
+
+function handle_run_tool(player, area, is_alt_selection)
+    local selected_entities = player.surface.find_entities(area)
+    if #selected_entities > 0 then
+        local target = selected_entities[1]
+        player.print("Running to selected " .. q(target.name))
+        run_to_target(player, target)
+    elseif player.selected ~= nil then
+        local target = player.selected
+        player.print("Running to highlighted " .. q(target.name))
+        run_to_target(player, target)
+    else
+        target = area.left_top
+        player.print("Running to position " .. target.x .. "," .. target.y)
+        -- Logger.log()
+        run_to_target(player, target)
+    end
+end
+
+-- try to calculate a path from the given player to the given target
+-- target can be either a Position or a LuaEntity
+function run_to_target(player, target)
+    stop_moving_player_along_path(player)
 
     -- we can't path from the player's exact position, presumably because the player is an obstacle itself
     -- so instead we find a position near the player which we can path from
@@ -332,28 +354,38 @@ function run_to_selection(player)
         return
     end
 
+    local target_position = 0
     local how_close = 0
-    if target.prototype.collision_mask["player-layer"] then
-        -- since this target can collide with the player, we need to figure out its edges and use
-        -- that to modify how close we try to get
-        local target_box = target.prototype.collision_box
 
-        local left_top = target_box.left_top
-        local right_top = {x = target_box.right_bottom.x, y = target_box.left_top.y}
-        local right_bottom = target_box.right_bottom
-        local left_bottom = {x = target_box.left_top.x, y = target_box.right_bottom.y}
-        local corners = {left_top, right_top, right_bottom, left_bottom}
-        local furthest_corner = nil
-        local furthest_corner_dist = nil
-        for _, corner in pairs(corners) do
-            local dist = Position.distance({x = 0.0, y = 0.0}, corner)
-            if furthest_corner == nil or furthest_corner_dist < dist then
-                furthest_corner = corner
-                furthest_corner_dist = dist
+    if Is.Object(target) then
+        target_position = target.position
+
+        if target.prototype.collision_mask["player-layer"] then
+            -- since this target can collide with the player, we need to figure out its edges and use
+            -- that to modify how close we try to get
+            local target_box = target.prototype.collision_box
+
+            local left_top = target_box.left_top
+            local right_top = {x = target_box.right_bottom.x, y = target_box.left_top.y}
+            local right_bottom = target_box.right_bottom
+            local left_bottom = {x = target_box.left_top.x, y = target_box.right_bottom.y}
+            local corners = {left_top, right_top, right_bottom, left_bottom}
+            local furthest_corner = nil
+            local furthest_corner_dist = nil
+            for _, corner in pairs(corners) do
+                local dist = Position.distance({x = 0.0, y = 0.0}, corner)
+                if furthest_corner == nil or furthest_corner_dist < dist then
+                    furthest_corner = corner
+                    furthest_corner_dist = dist
+                end
             end
+            how_close = furthest_corner_dist + .3
         end
-        how_close = furthest_corner_dist + .3
-        player.print("Closeness " .. serpent.block(furthest_corner_dist))
+    elseif Is.Position(target) then
+        target_position = target
+    else
+        player.print("Unrecognized target to run to: " .. serpent.block(target))
+        return
     end
 
     local path_id =
@@ -361,7 +393,7 @@ function run_to_selection(player)
         bounding_box = {{-0.2, -0.2}, {0.2, 0.2}}, -- player's collision box according to data.raw
         collision_mask = {"player-layer"},
         start = start_pos,
-        goal = target.position,
+        goal = target_position,
         force = player.force,
         radius = how_close,
         pathfind_flags = {
@@ -373,9 +405,9 @@ function run_to_selection(player)
         can_open_gates = true,
         path_resolution_modifier = 1
     }
-    player.print(
+    Logger.log(
         "Issued pathfinding request to " ..
-            target.position.x .. "," .. target.position.y .. " (request-id: " .. path_id .. ")"
+            target_position.x .. "," .. target_position.y .. " (request-id: " .. path_id .. ")"
     )
     Game.get_or_set_data("pathfinder", player.index, "last_path_id", true, path_id)
 end
@@ -430,14 +462,30 @@ Event.register(
         stop_moving_player_along_path(game.players[event.player_index])
     end
 )
+Event.register(
+    {
+        defines.events.on_player_selected_area,
+        defines.events.on_player_alt_selected_area
+    },
+    function(e)
+        if e.item ~= "runtool" then
+            return
+        end
+        local player = game.players[e.player_index]
+        local is_alt_selection = e.name == defines.events.on_player_alt_selected_area
+        -- player.print(serpent.block(e))
+        local area = Area(e.area):normalize():ceil():corners()
+        handle_run_tool(player, e.area, is_alt_selection)
+    end
+)
 
 -- simple hotkey mappings
 local hotkey_actions = {
-    ["a11y-hotkey-explain-selection"] = explain_selection,
-    ["a11y-hotkey-run-to-selection"] = run_to_selection,
-    ["a11y-hotkey-mine-selection"] = mine_selection,
-    ["a11y-hotkey-mine-closest-resouce"] = mine_closest_resource,
-    ["a11y-hotkey-mine-tile-under-player"] = mine_tile_under_player
+    ["hotkey-explain-selection"] = explain_selection,
+    ["hotkey-get-runtool"] = grab_runtool,
+    ["hotkey-mine-closest-resouce"] = mine_closest_resource,
+    ["hotkey-mine-selection"] = mine_selection,
+    ["hotkey-mine-tile-under-player"] = mine_tile_under_player
 }
 Event.register(
     table.keys(hotkey_actions),

@@ -11,7 +11,7 @@ How does it work?
 
 This mod exposes a number of hot keys to provide alternate control schemes. For example:
 
-* Run character to cursor - <kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd>
+* Run character to cursor - <kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd> (then left click)
 * Mine closest resource in range of character - <kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>E</kbd>
 * etc
 
@@ -45,10 +45,8 @@ Todo list
 * mining a item should refresh the UI
 * should be able to mine tile under cursor (needs selection tool probably?)
 * Sufficiently high speed players don't run at max speed due to how we're tracking progress along the path found
-* Running to a location is only possible if there is an entity under the cursor - maybe a selection tool needs to be introduced to be able to run to anywhere?
 * Mining resources and buildings should take some time - implement the mining hardness formula for this based on the FF post.
-* Commands that don't require input should be triggerable via a hotkey (or a chord) to prevent having to send console commands to trigger every command.
-* Commands that do require input should probably have a hotkey to accept a text box for input.
+* Commands that require input should probably have a hotkey to open a text box for input to avoid disabling achievements unnecessarily.
 
 
 Relevant Software
@@ -97,3 +95,7 @@ log()
 --  writes to stdout (run the game from a terminal)
 print()
 ```
+
+### Attributions
+
+* Contains modified icons from Font Awesome, licensed under CC Attributions 4.0 license (https://creativecommons.org/licenses/by/4.0/).
