@@ -473,8 +473,6 @@ Event.register(
         end
         local player = game.players[e.player_index]
         local is_alt_selection = e.name == defines.events.on_player_alt_selected_area
-        -- player.print(serpent.block(e))
-        local area = Area(e.area):normalize():ceil():corners()
         handle_run_tool(player, e.area, is_alt_selection)
     end
 )
