@@ -360,7 +360,7 @@ function run_to_target(player, target)
     if Is.Object(target) then
         target_position = target.position
 
-        if target.prototype.collision_mask["player-layer"] then
+        if target.prototype.collision_mask ~= nil and target.prototype.collision_mask["player-layer"] then
             -- since this target can collide with the player, we need to figure out its edges and use
             -- that to modify how close we try to get
             local target_box = target.prototype.collision_box
