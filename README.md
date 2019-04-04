@@ -41,12 +41,32 @@ Oh, if you're looking at this mod, you should probably also read [Tutorial:Keybo
 Todo list
 ---------
 
+### Investigate
+
+* Can we see what someone is hovering the UI? Would be useful to "what is" a hovered item in inventory.
+
+### QoL and papercuts
+
+* When you can't craft something because of missing resources, print out how many of what is missing
+* Commands that require input should probably have a hotkey to open a text box for input to avoid disabling achievements unnecessarily.
+* Restore the thing in hand after a "run there"
+
+### New Features
+
+* Have a way to refuel something or everything quickly, prioritizing the best fuel first (look at autofill mod)
+* Have a way to grab all of an item in range quickly (both from floor and from inventories of items)
+* Have a way to mine everything in range quickly (for clearing trees)
+* Have a way to print how many of an item you have in inventory (maybe also how many you can craft?)
+* Have a way to craft what's in cursor (as a ghost or regular) or hovered over
+* Have a way to lay belt (assuming belt is in hand) from first to last click (assuming it's in a row). Maybe show a cross of visual lines as a guide to help line up tiles? Will probably need to check that each tile can be built before starting, and if we fail to build anything then stop building and print an error.
+* Allow aliasing virtual items when crafting or grabbing? E.g. "craft/grab electric"
+
+### Bugs
+
 * oil is not mineable, so should be filtered out from the mining UI. Is there a generic API for detecting non-mineable objects?
 * mining a item should refresh the UI
-* should be able to mine tile under cursor (needs selection tool probably?)
 * Sufficiently high speed players don't run at max speed due to how we're tracking progress along the path found
 * Mining resources and buildings should take some time - implement the mining hardness formula for this based on the FF post.
-* Commands that require input should probably have a hotkey to open a text box for input to avoid disabling achievements unnecessarily.
 
 
 Relevant Software
@@ -74,6 +94,38 @@ Voice control software is useful for simulating clicks, keypresses, and typing; 
 
 Scratchpad
 ----------
+
+### Voice control grammar notes
+
+It's important to have a uniform interface to perform actions on game entities, so here are thoughts on voice grammar design to inform the API of A11y:
+
+* Most actions should be of the form `<action> <target>`.
+* Actions are things like "mine", "craft", "grab", "run", etc
+  * Certain actions might have numbers after them - e.g. "craft 15"
+* Targets should link to game objects/entities. To support both eye/head-tracking and voice-only
+  playstyles, we need to support several targeting mechanisms:
+  * `it` - whatever cursor hovers over (or chose using a selection tool)
+  * `here` - target closest entity eligible for action
+  * `all` - target all entities eligible for action
+  * `<item prototype name>` - target the entities whose prototype is named this. E.g. `grab copper plate` or `mine iron ore`
+  * `<item prototype group>` - some items are part of the same named "group" (`game.player.selected.prototype.subgroup.name`), like all trees are `tree`.
+  * `grid <coordinate>` - to enable true voice-only play, we need to be able to move and interact via
+    something like a grid system, or naming tiles via tiny UI.
+
+Open questions:
+
+* should mining resources use different keyword than deconstructing buildings? They're the same as
+  far as the game is concerned, but it might be helpful to allow mining items
+* there needs to be a name for mining tiles, separate from mining resources
+* we have an indicator for the closest resource, and closest building still needs implementing.. but
+  what about tiles? Since the only interesting thing to do with a tile is mine it, maybe this should only
+  be drawn when there's a tile in mining range?
+* should the grid system use rows & columns like B3 or should each tile just have its own number? how
+  do these scale for longer reach or interacting outside reach? Due to latency we want to avoid a
+  dragon-mousegrid-like system.
+* sometimes you're okay with your character moving to fulfil the command, sometimes not. Should there be
+  a modifier suffix, like `<action> <target> [<modifier>]`, where you can say things like `moving` to
+  allow your character to move?
 
 ### Debugging tricks
 
