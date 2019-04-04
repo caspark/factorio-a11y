@@ -31,7 +31,7 @@ Features
 Commands are provided to:
 
 * mine ores/buildings which are hovered over by the mouse or close to the character
-* run the character to the entity under the mouse cursor (respecting player speed, tile speed modifiers like concrete, and obstacles in the way)
+* run the character to the location or entity under the mouse cursor (respecting player speed, tile speed modifiers like concrete, and obstacles in the way)
 * summon items from inventory to your cursor by name (e.g. "grab inserter") without having to open the inventory
 * craft items by name without opening the inventory (e.g. you could say "craft eleven stone furnace")
 * print out the name of the item being held or under your cursor (useful for crafting or grabbing items by name)
