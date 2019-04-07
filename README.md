@@ -64,7 +64,6 @@ Todo list
 ### Bugs
 
 * oil is not mineable, so should be filtered out from the mining UI. Is there a generic API for detecting non-mineable objects?
-* mining a item should refresh the UI
 * Sufficiently high speed players don't run at max speed due to how we're tracking progress along the path found
 * Mining resources and buildings should take some time - implement the mining hardness formula for this based on the FF post.
 

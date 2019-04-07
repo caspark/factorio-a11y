@@ -427,7 +427,7 @@ Event.register(
 )
 Event.register(
     defines.events.on_script_path_request_finished,
-    function(event, dog)
+    function(event)
         local path_id = event.id
         for _, player in pairs(game.players) do
             if path_id == Game.get_or_set_data("pathfinder", player.index, "last_path_id", true, path_id) then
@@ -448,6 +448,13 @@ Event.register(
                 end
             end
         end
+    end
+)
+Event.register(
+    defines.events.on_player_mined_item,
+    function(event)
+        local player = game.players[event.player_index]
+        request_ui_rerender(player)
     end
 )
 
