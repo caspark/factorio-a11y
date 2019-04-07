@@ -179,7 +179,7 @@ function try_move_player_along_path(player)
         return
     end
     local progress =
-        Game.get_or_set_data("pathfinder", player.index, "path_progress", false, {waypoint = 0, dist = nil})
+        Game.get_or_set_data("pathfinder", player.index, "path_progress", false, {waypoint = 0, dist_remaining = nil})
     local curr_waypoint = path[progress.waypoint]
     local next_waypoint = path[progress.waypoint + 1]
 
@@ -194,7 +194,6 @@ function try_move_player_along_path(player)
     end
     -- move the player along the path
     progress.dist_remaining = progress.dist_remaining - player.character_running_speed
-    -- local new_player_pos = Position.lerp(curr_waypoint.position, next_waypoint.position, progress.dist_remaining)
     local new_player_pos =
         Position.offset_along_line(curr_waypoint.position, next_waypoint.position, progress.dist_remaining)
     player.teleport(new_player_pos)
