@@ -366,7 +366,7 @@ function start_crafting(player, opts)
 end
 
 -- print out the name of the held or selected item
-function explain_selection(player)
+function hotkey_explain_selection(player)
     if player.cursor_stack and player.cursor_stack.valid_for_read then
         player.print("That is " .. q(player.cursor_stack.name) .. " (cursor stack)")
     elseif player.selected then
@@ -380,7 +380,7 @@ end
 -- (would be nice to do a regular mining action but doesn't seem possible
 -- without locking cursor into place and hold right click, which is very
 -- annoying when using eye tracking!)
-function mine_selection(player)
+function hotkey_mine_selection(player)
     local target = player.selected
     if not target then
         player.print("No cursor selection to mine!")
@@ -398,7 +398,7 @@ end
 
 -- mine the resource or tree closest to the player instantly
 -- (again, would be nice to do a regular mining action but doesn't seem possible)
-function mine_closest_resource(player)
+function hotkey_mine_closest_resource(player)
     local target = get_closest_reachable_resource(player)
     if not target then
         player.print("No resource in range to mine!")
@@ -415,7 +415,7 @@ function mine_closest_resource(player)
 end
 
 -- mine the tile which the player is standing on
-function mine_tile_under_player(player)
+function hotkey_mine_tile_under_player(player)
     local to_mine = player.surface.get_tile(player.position)
     if to_mine then
         local to_mine_name = to_mine.prototype.name
@@ -427,7 +427,7 @@ function mine_tile_under_player(player)
     end
 end
 
-function grab_runtool(player)
+function hotkey_grab_runtool(player)
     if player.clean_cursor() then
         player.cursor_stack.set_stack({name = "runtool"})
     end
@@ -529,7 +529,8 @@ function run_to_target(player, target)
     Game.get_or_set_data("pathfinder", player.index, "last_path_id", true, path_id)
 end
 
-function refuel_closest(player)
+function hotkey_refuel_closest(player)
+    player.print("hi there")
     local target = get_closest_reachable_building(player)
     if target then
         refuel_target(player, target)
@@ -626,11 +627,11 @@ Event.register(
 
 -- simple hotkey mappings
 local hotkey_actions = {
-    ["hotkey-explain-selection"] = explain_selection,
-    ["hotkey-get-runtool"] = grab_runtool,
-    ["hotkey-mine-closest-resouce"] = mine_closest_resource,
-    ["hotkey-mine-selection"] = mine_selection,
-    ["hotkey-mine-tile-under-player"] = mine_tile_under_player,
+    ["hotkey-explain-selection"] = hotkey_explain_selection,
+    ["hotkey-get-runtool"] = hotkey_grab_runtool,
+    ["hotkey-mine-closest-resouce"] = hotkey_mine_closest_resource,
+    ["hotkey-mine-selection"] = hotkey_mine_selection,
+    ["hotkey-mine-tile-under-player"] = hotkey_mine_tile_under_player,
     ["hotkey-refuel-closest"] = hotkey_refuel_closest,
     ["hotkey-refuel-selection"] = hotkey_refuel_selection
 }
