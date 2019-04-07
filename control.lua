@@ -3,7 +3,7 @@ local Entity = require("__stdlib__/stdlib/entity/entity")
 local Event = require("__stdlib__/stdlib/event/event")
 local Game = require("__stdlib__/stdlib/game")
 local Is = require("__stdlib__/stdlib/utils/is")
-local Logger = require("__stdlib__/stdlib/misc/logger").new("A11y", "A11y_Debug", true)
+local Logger = require("__stdlib__/stdlib/misc/logger").new("A11y", "A11y_Debug", true, {log_ticks = true})
 local Player = require("__stdlib__/stdlib/event/player").register_events()
 local Position = require("__stdlib__/stdlib/area/position")
 local table = require("__stdlib__/stdlib/utils/table")
@@ -178,32 +178,53 @@ function try_move_player_along_path(player)
         player.print("Found a path but it doesn't have a 0th waypoint!")
         return
     end
-    local progress =
-        Game.get_or_set_data("pathfinder", player.index, "path_progress", false, {waypoint = 0, dist_remaining = nil})
-    local curr_waypoint = path[progress.waypoint]
-    local next_waypoint = path[progress.waypoint + 1]
+    local progress = Game.get_or_set_data("pathfinder", player.index, "path_progress", false, {waypoint = 0})
 
-    if not curr_waypoint or not next_waypoint then
-        -- done pathfinding, clear the path to follow
+    -- Move the player along the path in steps. This is tricky because we need to respect the player's
+    -- speed each step of the way, which is influenced by their position (due to concrete). To do this,
+    -- we introduce the concept of "travel power" (the fraction of their unused speed this tick) and
+    -- "travel dist" (the actual distance the player can travel still, based on applying their travel
+    -- power to their current speed).
+    -- Also, to avoid overshooting waypoints, each step is sized as the smaller of the player's travel
+    -- dist and the current player pos<->next waypoint pos.
+    local travel_power_left = 1.0 -- fraction
+    local next_waypoint = path[progress.waypoint]
+
+    while (travel_power_left > 0 and next_waypoint ~= nil) do
+        local old_player_pos = player.position
+        local next_waypoint_dist = Position.distance(old_player_pos, next_waypoint.position)
+        local travel_dist_left = travel_power_left * player.character_running_speed
+
+        local new_player_pos = nil
+        if travel_dist_left >= next_waypoint_dist then
+            -- this step is moving the player straight to the next waypoint
+            new_player_pos = next_waypoint.position
+            -- now make progress towards the next waypoint
+            progress.waypoint = progress.waypoint + 1
+            next_waypoint = path[progress.waypoint]
+        else
+            -- in this step we just move the player as far we can towards the next waypoint
+            local distance_remaining = next_waypoint_dist - travel_dist_left
+            new_player_pos = Position.offset_along_line(old_player_pos, next_waypoint.position, distance_remaining)
+        end
+
+        -- Actually move the player; unfortunately we there's no API to "run" them, so teleport instead.
+        -- This also means there's no walking animation or noise unfortunately, but oh well.
+        player.teleport(new_player_pos)
+
+        local travel_dist_used = Position.distance(old_player_pos, new_player_pos)
+        if travel_dist_used >= travel_dist_left then
+            -- Sometimes (due to floating point imprecision?) we travel more distance than we should
+            -- be able to, so just wipe out all our travel power in this case.
+            travel_power_left = 0
+        elseif travel_dist_used > 0 then
+            travel_power_left = travel_power_left - (travel_dist_left / travel_dist_used)
+        end
+    end
+
+    if not next_waypoint then
+        Logger.log("Done moving player along path; ended up at " .. player.position.x .. "," .. player.position.y)
         stop_moving_player_along_path(player)
-        return
-    end
-    if progress.dist_remaining == nil then
-        -- new waypoint, stash how much distance we need to move
-        progress.dist_remaining = Position.distance(curr_waypoint.position, next_waypoint.position)
-    end
-    -- move the player along the path
-    progress.dist_remaining = progress.dist_remaining - player.character_running_speed
-    local new_player_pos =
-        Position.offset_along_line(curr_waypoint.position, next_waypoint.position, progress.dist_remaining)
-    player.teleport(new_player_pos)
-    if progress.dist_remaining <= 0 then
-        -- move on to the next waypoint
-        -- FIXME for sufficiently high player speeds or fine grained paths, this resetting results in "losing" part
-        --       of your progress towards the next waypoint so what we should really do is keep going to further
-        --       waypoints and decrementing dist_remaining until dist_remaining reaches zero (or we run out of waypoints)
-        progress.dist_remaining = nil
-        progress.waypoint = progress.waypoint + 1
     end
 end
 
@@ -327,7 +348,6 @@ function handle_run_tool(player, area, is_alt_selection)
     else
         target = area.left_top
         player.print("Running to position " .. target.x .. "," .. target.y)
-        -- Logger.log()
         run_to_target(player, target)
     end
 end
