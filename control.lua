@@ -13,16 +13,73 @@ function q(s)
     return "'" .. s .. "'"
 end
 
-function get_closest_mineable_resource(player)
+-- constants
+
+local const_prototype_resources = {"resource", "tree", "simple-entity"}
+
+local const_prototype_buildings = {
+    "accumulator",
+    "ammo-turret",
+    "arithmetic-combinator",
+    "artillery-turret",
+    "assembling-machine",
+    "beacon",
+    "boiler",
+    "constant-combinator",
+    "container",
+    "curved-rail",
+    "decider-combinator",
+    "electric-energy-interface",
+    "electric-pole",
+    "electric-turret",
+    "fluid-turret",
+    "furnace",
+    "gate",
+    "generator",
+    "heat-interface",
+    "heat-pipe",
+    "infinity-container",
+    "infinity-pipe",
+    "inserter",
+    "lab",
+    "lamp",
+    "loader",
+    "logistic-container",
+    "mining-drill",
+    "offshore-pump",
+    "pipe-to-ground",
+    "pipe",
+    "power-switch",
+    "programmable-speaker",
+    "pump",
+    "radar",
+    "rail-chain-signal",
+    "rail-signal",
+    "reactor",
+    "roboport",
+    "rocket-silo",
+    "solar-panel",
+    "splitter",
+    "storage-tank",
+    "straight-rail",
+    "train-stop",
+    "transport-belt",
+    "turret",
+    "underground-belt",
+    "wall"
+}
+
+function get_closest_reachable_resource(player)
     local resource_reach_area =
         Area.adjust(
         {player.position, player.position},
         {player.resource_reach_distance, player.resource_reach_distance}
     )
-    local closest_resource = nil
-    local closest_dist = 100000
     local all_resources =
-        player.surface.find_entities_filtered {area = resource_reach_area, type = {"resource", "tree", "simple-entity"}}
+        player.surface.find_entities_filtered {area = resource_reach_area, type = const_prototype_resources}
+
+    local closest_resource = nil
+    local closest_dist = math.huge
     if all_resources then
         for k, res in pairs(all_resources) do
             local d = Position.distance_squared(player.position, res.position)
@@ -33,6 +90,27 @@ function get_closest_mineable_resource(player)
         end
     end
     return closest_resource
+end
+
+function get_closest_reachable_building(player)
+    local reach_area = Area.adjust({player.position, player.position}, {player.reach_distance, player.reach_distance})
+    local all_buildings =
+        player.surface.find_entities_filtered {
+        area = reach_area,
+        type = const_prototype_buildings
+    }
+    local closest_building = nil
+    local closest_dist = math.huge
+    if all_buildings then
+        for k, building in pairs(all_buildings) do
+            local d = Position.distance_squared(player.position, building.position)
+            if d < closest_dist and player.can_reach_entity(building) then
+                closest_dist = d
+                closest_building = building
+            end
+        end
+    end
+    return closest_building
 end
 
 function request_ui_rerender(player)
@@ -61,7 +139,8 @@ function render_ui(player)
     local normal_reach_area = Area.adjust({player.position, player.position}, {normal_reach, normal_reach})
     local resource_reach_area = Area.adjust({player.position, player.position}, {resource_reach, resource_reach})
 
-    local closest_resource = get_closest_mineable_resource(player)
+    local closest_reachable_resource = get_closest_reachable_resource(player)
+    local closest_reachable_building = get_closest_reachable_building(player)
 
     -- get a reference to the grid table, remove any existing drawings, then save new drawings in it
     local ui_ids = Game.get_or_set_data("ui", player.index, "ui_ids", false, {})
@@ -80,25 +159,6 @@ function render_ui(player)
         surface = player.surface,
         draw_on_ground = true
     }
-
-    -- draw closest resource
-    if closest_resource then
-        ui_ids[#ui_ids + 1] =
-            rendering.draw_circle(
-            {
-                color = defines.color.red,
-                radius = 1,
-                width = 2,
-                filled = false,
-                target = closest_resource.position,
-                target_offset = {0, 0},
-                surface = player.surface,
-                players = {player.index},
-                visible = true,
-                draw_on_ground = true
-            }
-        )
-    end
 
     -- render mining reach
     ui_ids[#ui_ids + 1] =
@@ -133,6 +193,44 @@ function render_ui(player)
             draw_on_ground = true
         }
     )
+
+    -- draw closest resource
+    if closest_reachable_resource then
+        ui_ids[#ui_ids + 1] =
+            rendering.draw_circle(
+            {
+                color = defines.color.red,
+                radius = 1,
+                width = 2,
+                filled = false,
+                target = closest_reachable_resource.position,
+                target_offset = {0, 0},
+                surface = player.surface,
+                players = {player.index},
+                visible = true,
+                draw_on_ground = true
+            }
+        )
+    end
+
+    -- draw closest building
+    if closest_reachable_building then
+        ui_ids[#ui_ids + 1] =
+            rendering.draw_circle(
+            {
+                color = defines.color.orange,
+                radius = 1,
+                width = 2,
+                filled = false,
+                target = closest_reachable_building.position,
+                target_offset = {0, 0},
+                surface = player.surface,
+                players = {player.index},
+                visible = true,
+                draw_on_ground = false
+            }
+        )
+    end
 
     -- render last provided path
     local waypoints = Game.get_or_set_data("pathfinder", player.index, "path_to_follow", false, nil)
@@ -301,7 +399,7 @@ end
 -- mine the resource or tree closest to the player instantly
 -- (again, would be nice to do a regular mining action but doesn't seem possible)
 function mine_closest_resource(player)
-    local target = get_closest_mineable_resource(player)
+    local target = get_closest_reachable_resource(player)
     if not target then
         player.print("No resource in range to mine!")
         return
@@ -431,6 +529,29 @@ function run_to_target(player, target)
     Game.get_or_set_data("pathfinder", player.index, "last_path_id", true, path_id)
 end
 
+function refuel_closest(player)
+    local target = get_closest_reachable_building(player)
+    if target then
+        refuel_target(player, target)
+    else
+        player.print("No building in reach to refuel!")
+    end
+end
+
+function hotkey_refuel_selection(player)
+    local target = player.selected
+    if target then
+        refuel_target(player, target)
+    else
+        player.print("No cursor selection to refuel!")
+    end
+end
+
+function refuel_target(player, target)
+    --TODO check if target can be refueled
+    player.print("TODO: refuel: " .. q(target.name))
+end
+
 -- ********* Event Handlers *********
 
 -- it'd be nice to use on_player_changed_position, but that only fires when the player has
@@ -509,7 +630,9 @@ local hotkey_actions = {
     ["hotkey-get-runtool"] = grab_runtool,
     ["hotkey-mine-closest-resouce"] = mine_closest_resource,
     ["hotkey-mine-selection"] = mine_selection,
-    ["hotkey-mine-tile-under-player"] = mine_tile_under_player
+    ["hotkey-mine-tile-under-player"] = mine_tile_under_player,
+    ["hotkey-refuel-closest"] = hotkey_refuel_closest,
+    ["hotkey-refuel-selection"] = hotkey_refuel_selection
 }
 Event.register(
     table.keys(hotkey_actions),
