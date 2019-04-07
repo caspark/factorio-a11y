@@ -148,6 +148,19 @@ log()
 print()
 ```
 
-### Attributions
+### References
+
+https://lua-api.factorio.com/latest/index.html
+
+https://wiki.factorio.com/Data.raw
+https://wiki.factorio.com/Prototype_definitions
+https://wiki.factorio.com/Prototype/Decorative
+https://wiki.factorio.com/Prototype/SimpleEntity
+
+https://github.com/Afforess/Factorio-Stdlib/tree/master/stdlib
+http://afforess.github.io/Factorio-Stdlib/index.html
+
+Attributions
+------------
 
 * Contains modified icons from Font Awesome, licensed under CC Attributions 4.0 license (https://creativecommons.org/licenses/by/4.0/).
