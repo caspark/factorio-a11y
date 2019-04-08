@@ -120,10 +120,10 @@ function M.get_closest_refuelable_entity(player)
     return closest_fuelable
 end
 
-function M.refuel_target(player, target)
+-- Refuel `target` using up to `refuel_count` fuel from the inventory of `player`.
+-- Better fuel will be used first.
+function M.refuel_target(player, target, refuel_count)
     local all_item_prototypes = game.item_prototypes
-
-    local refuel_count = 20 -- hardcoded for now
 
     local target_fuel_inventory = target.get_inventory(defines.inventory.fuel)
     if not target_fuel_inventory then
@@ -144,7 +144,7 @@ function M.refuel_target(player, target)
             if refuel_count > fuel_owned_count then
                 refuel_count = fuel_owned_count
             end
-            Logger.log("Should load " .. q(target.name) .. " with " .. refuel_count .. " of " .. q(fuel_name))
+            Logger.log("Will try to load " .. q(target.name) .. " with " .. refuel_count .. " of " .. q(fuel_name))
 
             local fuel_loaded_count = target_fuel_inventory.insert({name = fuel_name, count = refuel_count})
             if fuel_loaded_count > 0 then
@@ -184,7 +184,7 @@ function M.refuel_target(player, target)
     local fuels_in_use = {}
     local has_fuels_in_use = false
     local player_has_all_fuels = true
-    for fuel_name, _fuel_count in pairs(target_fuel_inventory.get_contents()) do
+    for fuel_name, _ in pairs(target_fuel_inventory.get_contents()) do
         table.insert(fuels_in_use, fuel_name)
         has_fuels_in_use = true
         if player.get_item_count(fuel_name) == 0 then

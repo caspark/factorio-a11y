@@ -205,7 +205,7 @@ end
 function hotkey_refuel_closest(player)
     local target = Refuel.get_closest_refuelable_entity(player)
     if target then
-        Refuel.refuel_target(player, target)
+        Refuel.refuel_target(player, target, 20)
     else
         player.print("Nothing in reach which can be refueled!")
     end
@@ -214,7 +214,7 @@ end
 function hotkey_refuel_selection(player)
     local target = player.selected
     if target then
-        Refuel.refuel_target(player, target)
+        Refuel.refuel_target(player, target, 20)
     else
         player.print("No cursor selection to refuel!")
     end

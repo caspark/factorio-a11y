@@ -35,6 +35,7 @@ Commands are provided to:
 * summon items from inventory to your cursor by name (e.g. "grab inserter") without having to open the inventory
 * craft items by name without opening the inventory (e.g. you could say "craft eleven stone furnace")
 * print out the name of the item being held or under your cursor (useful for crafting or grabbing items by name)
+* refuel drills, furnaces and other entities that burn fuel (automatically using the best fuel you have)
 
 Oh, if you're looking at this mod, you should probably also read [Tutorial:Keyboard shortcuts](https://wiki.factorio.com/Tutorial:Keyboard_shortcuts) and [TIL all the keyboard shortcuts](https://www.reddit.com/r/factorio/comments/5odbdf/til_all_the_keyboard_shortcuts/), as this mod assumes that you know and use these existing tricks.
 
@@ -53,7 +54,6 @@ Todo list
 
 ### New Features
 
-* Have a way to refuel something or everything quickly, prioritizing the best fuel first (look at autofill mod)
 * Have a way to grab all of an item in range quickly (both from floor and from inventories of items)
 * Have a way to mine everything in range quickly (for clearing trees)
 * Have a way to print how many of an item you have in inventory (maybe also how many you can craft?)
