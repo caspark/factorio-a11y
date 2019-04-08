@@ -51,6 +51,7 @@ Todo list
 * When you can't craft something because of missing resources, print out how many of what is missing
 * Commands that require input should probably have a hotkey to open a text box for input to avoid disabling achievements unnecessarily.
 * Restore the thing in hand after a "run there"
+* When mining nearest resource, prefer mining things that collide with the player (e.g. trees & rocks) for convenience in clearing a path.
 
 ### New Features
 
