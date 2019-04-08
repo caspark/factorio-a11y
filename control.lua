@@ -1,10 +1,5 @@
-local Area = require("__stdlib__/stdlib/area/area")
-local Entity = require("__stdlib__/stdlib/entity/entity")
 local Event = require("__stdlib__/stdlib/event/event")
-local Game = require("__stdlib__/stdlib/game")
 local Logger = require("__stdlib__/stdlib/misc/logger").new("A11y", "A11y_control", true, {log_ticks = true})
-local Player = require("__stdlib__/stdlib/event/player").register_events()
-local Position = require("__stdlib__/stdlib/area/position")
 local Table = require("__stdlib__/stdlib/utils/table")
 
 local Refuel = require("logic/refuel")
