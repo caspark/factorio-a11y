@@ -1,16 +1,24 @@
 local Event = require("__stdlib__/stdlib/event/event")
-local Logger = require("__stdlib__/stdlib/misc/logger").new("A11y", "A11y_control", true, {log_ticks = true})
 local Table = require("__stdlib__/stdlib/utils/table")
+local String = require("__stdlib__/stdlib/utils/string")
 
 local Refuel = require("logic/refuel")
 local Mine = require("logic/mine")
 local Run = require("logic/run")
 
--- ============== Global helper functions ==============
+-- ============== Global helpers ==============
+
+Logger = require("__stdlib__/stdlib/misc/logger").new("A11y", "A11y_Debug", true, {log_ticks = true})
 
 -- global helper function to quote a string in single quotes
 function q(s)
     return "'" .. s .. "'"
+end
+
+-- global helper to turn a list of strings into a single string,
+-- joined by commas & surrounded by quotes
+function q_list(list_of_s)
+    return (", "):join(Table.map(list_of_s, q))
 end
 
 -- ============== Console-based API ==============
@@ -69,9 +77,13 @@ Event.register(
     defines.events.on_tick,
     function(event)
         for _, player in pairs(game.players) do
+            -- do any game state updates first to avoid UI being out of date
             Run.try_move_player_along_path(player)
-            Run.render_ui(player)
+
+            -- then render the UI
             Mine.render_ui(player)
+            Refuel.render_ui(player)
+            Run.render_ui(player)
         end
     end
 )
@@ -191,18 +203,18 @@ function hotkey_mine_tile_under_player(player)
 end
 
 function hotkey_refuel_closest(player)
-    local target = Mine.get_closest_reachable_building(player)
+    local target = Refuel.get_closest_refuelable_entity(player)
     if target then
-        refuel_target(player, target)
+        Refuel.refuel_target(player, target)
     else
-        player.print("No building in reach to refuel!")
+        player.print("Nothing in reach which can be refueled!")
     end
 end
 
 function hotkey_refuel_selection(player)
     local target = player.selected
     if target then
-        refuel_target(player, target)
+        Refuel.refuel_target(player, target)
     else
         player.print("No cursor selection to refuel!")
     end
@@ -214,8 +226,8 @@ local hotkey_actions = {
     ["hotkey-mine-closest-resouce"] = hotkey_mine_closest_resource,
     ["hotkey-mine-selection"] = hotkey_mine_selection,
     ["hotkey-mine-tile-under-player"] = hotkey_mine_tile_under_player,
-    ["hotkey-refuel-closest"] = Refuel.hotkey_refuel_closest,
-    ["hotkey-refuel-selection"] = Refuel.hotkey_refuel_selection
+    ["hotkey-refuel-closest"] = hotkey_refuel_closest,
+    ["hotkey-refuel-selection"] = hotkey_refuel_selection
 }
 Event.register(
     Table.keys(hotkey_actions),

@@ -1,7 +1,6 @@
 local Event = require("__stdlib__/stdlib/event/event")
 local Game = require("__stdlib__/stdlib/game")
 local Is = require("__stdlib__/stdlib/utils/is")
-local Logger = require("__stdlib__/stdlib/misc/logger").new("A11y", "A11y_run", true, {log_ticks = true})
 local Position = require("__stdlib__/stdlib/area/position")
 
 local M = {}

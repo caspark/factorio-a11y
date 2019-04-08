@@ -23,7 +23,7 @@ function M.get_closest_reachable_resource(player)
     local closest_resource = nil
     local closest_dist = math.huge
     if all_resources then
-        for k, res in pairs(all_resources) do
+        for _, res in pairs(all_resources) do
             local d = Position.distance_squared(player.position, res.position)
             if d < closest_dist and player.can_reach_entity(res) then
                 closest_dist = d
@@ -44,7 +44,7 @@ function M.get_closest_reachable_building(player)
     local closest_building = nil
     local closest_dist = math.huge
     if all_buildings then
-        for k, building in pairs(all_buildings) do
+        for _, building in pairs(all_buildings) do
             local d = Position.distance_squared(player.position, building.position)
             if d < closest_dist and player.can_reach_entity(building) then
                 closest_dist = d
@@ -70,7 +70,6 @@ function M.render_ui(player)
         Game.get_or_set_data("mine", player.index, "force_rerender", true, false)
     end
 
-    local color_grid_background = {r = 0, g = 0, b = 0, a = 0.4}
     local normal_reach = player.reach_distance
     local resource_reach = player.resource_reach_distance
 
