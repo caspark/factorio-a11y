@@ -51,8 +51,6 @@ Hotkeys
 
 * <kbd>Alt+Shift+R</kbd> then left click - run to clicked tile or entity
 
-You might also want to bind commands in your voice grammar of <samp>run ( north | west | south | east )</samp> to hold down <kbd>W/A/S/D</kbd> for you.
-
 ### Mining
 
 Mining covers removing builds, getting resources, and removing tiles.
@@ -95,14 +93,16 @@ These commands can be entered via the console (press `` ` ``). The intended way 
 Recommended Grammar
 -------------------
 
-A11y assumes you already have voice commands for clicking, right clicking, hitting individual keys (to open/close inventory/map/etc).
+A11y assumes you already have voice commands for clicking, right clicking, hitting individual keys (to open/close inventory/map/etc), but here are things you may not have thought of:
 
-You may also want to bind the following for easier inventory management:
-
-* <samp>copy</samp> to Shift Left Click
-* <samp>paste</samp> to Shift Right Click
-* <samp>transfer</samp> to Ctrl Left Click
-* <samp>split</samp> to Ctrl Right Click
+* Bind the following for easier inventory management:
+  * <samp>copy</samp> to Shift Left Click
+  * <samp>paste</samp> to Shift Right Click
+  * <samp>transfer</samp> to Ctrl Left Click
+  * <samp>split</samp> to Ctrl Right Click
+* Bind <samp>run ( north | west | south | east )</samp> to hold down <kbd>W/A/S/D</kbd> for you for easier exploring
+  * Also add a <samp>stop</samp> to release those 4 keys!
+* Make sure you have a quick command to hit <kbd>R</kbd> repeatedly, like <samp>red 3</samp> to rotate 3 times (although technically you only need 1-2 rotations, since <kbd>Shift+R</kbd> rotates once in reverse)
 
 Todo list
 ---------
