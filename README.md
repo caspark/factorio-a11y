@@ -1,43 +1,90 @@
 A11y for Factorio
 =================
 
-A set of accessibility helpers for Factorio, to assist in playing the game with less (or no) input from mouse & keyboard (e.g. via voice control, foot pedals, eye/head-tracking, etc).
+A11y (pronounced "ally") is an [accessibility](https://en.wikipedia.org/wiki/Computer_accessibility) mod for [Factorio](https://www.factorio.com/), which aims to make it possible to play the game with a little as possible input from mouse and keyboard while preserving the spirit of the game.
 
-Generally speaking, this mod aims to preserve existing gameplay mechanics - e.g. although this mod adds a way to move the character via the mouse cursor, rather than having the character instantly teleport from point A to point B, the character still needs to walk there along a valid path.
+You can use it as a "quality of life" mod but it really shines when it's paired with voice recognition software; for example:
 
+* Say <samp>refuel everything</samp> to put the best fuel you have into every furnace, car, burner inserter/mining drill in your reach
+* Say <samp>run there, grab stone furnace, click, refuel it</samp> to run where the cursor is, get a stone furnace from your inventory, build it, and load it up with the best fuel you have.
+* Say <samp>mine here repple five, craft ten wooden chest</samp> to mine the 5 closest trees and craft ten wooden chests
 
-How does it work?
------------------
+A11y aims to be compatible with other mods and to preserve existing gameplay mechanics; e.g. although it adds a way to move the character via the mouse cursor, rather than having the character instantly teleport from point A to point B, the character still needs to walk there along a valid path and brick/concrete still provide relevant speed boosts.
 
-This mod exposes a number of hot keys to provide alternate control schemes. For example:
+Currently the mod is done enough to use for the early (pre combat) game, with new features being added regularly. **Star this repository if you're interested to help me prioritize my projects.**
 
-* Run character to cursor - <kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd> (then left click)
-* Mine closest resource in range of character - <kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>E</kbd>
-* etc
+Awesome, how do I make it work!?
+--------------------------------
 
-It also exposes more complex functions, which an accessibility-impaired user can call from the console:
+First, a warning: **you'll get the most out of this mod right now if you're already familar with Dragon NaturallySpeaking, Vocola, Dragonfly, or Talon** (see *Relevant Software* below); This is mainly because I haven't included a ready-to-go voice grammar in this mod.
 
-```
-/sc __A11y__ grab(game.player, 'iron-plate') -- grabs iron plates from the player's inventory
-```
+With that out of the way:
 
-(The intended way to call these functions is to use voice recognition software - see *Relevant Software* heading below - to turn voice commands into text shortcuts which type them in.)
+1. The mod is not listed on the [Factorio mod portal](http://mods.factorio.com/) yet, so clone this repository into your `factorio/mods` directory
+2. Load up factorio to test that the A11y hotkeys documented below work to your satisfaction
+3. Write a voice grammar for Factorio to make voice commands hit your hotkeys
+4. Extend your grammar to support A11y's console commands. For now, you'll want to use Dragonfly's [DictListRef](https://dragonfly2.readthedocs.io/en/latest/elements.html#dictlistref-class) or equivalent with [a list of Factorio items](https://wiki.factorio.com/Data.raw#item) to make it easy to say item names.
 
-With enough work, it may eventually be possible to play Factorio with no hands at all.
+Eventually this mod will ship with an included voice grammar for Dragonfly and/or Talon, but for now the focus is on developing the capabilities of the mod itself.
 
-Features
---------
+Visual Aids
+-----------
 
-Commands are provided to:
+To make it easier to predict what your voice commands will do, A11y adds several visual aids:
 
-* mine ores/buildings which are hovered over by the mouse or close to the character
-* run the character to the location or entity under the mouse cursor (respecting player speed, tile speed modifiers like concrete, and obstacles in the way)
-* summon items from inventory to your cursor by name (e.g. "grab inserter") without having to open the inventory
-* craft items by name without opening the inventory (e.g. you could say "craft eleven stone furnace")
-* print out the name of the item being held or under your cursor (useful for crafting or grabbing items by name)
-* refuel drills, furnaces and other entities that burn fuel (automatically using the best fuel you have)
+<img alt="Example screenshot of visual aids in Factorio" src="https://i.imgur.com/WWLJMIc.jpg" height="250"/>
 
-Oh, if you're looking at this mod, you should probably also read [Tutorial:Keyboard shortcuts](https://wiki.factorio.com/Tutorial:Keyboard_shortcuts) and [TIL all the keyboard shortcuts](https://www.reddit.com/r/factorio/comments/5odbdf/til_all_the_keyboard_shortcuts/), as this mod assumes that you know and use these existing tricks.
+* The outer green circle is your reach for picking up items, mining and placing buildings.
+* The inner green circle is your reach for mining resources
+* The red circle denotes your closest resource (what <kbd>Alt+Shift+E</kbd> would mine)
+* The orange circle denotes your closest building
+* The yellow circle denotes your closest refuelable entity (what <kbd>Alt+Shift+F</kbd> would refuel)
+
+Hotkeys
+-------
+
+Utility:
+
+* <kbd>Alt+Shift+W</kbd> - the "*Explain*" command; print out name of item in hand or entity hovered by cursor
+
+Movement:
+
+* <kbd>Alt+Shift+R</kbd> then left click - run to clicked tile or entity
+
+Mining:
+
+* <kbd>Alt+Shift+E</kbd> - mine closest resource (ore, rock, tree, etc)
+* <kbd>Alt+Shift+M</kbd> - mine resource or entity hovered by cursor
+* <kbd>Alt+Shift+T</kbd> - mine tile directly under player (brick, concrete, etc)
+
+Fueling (burner miners/inserters, stone furnaces, cars, etc):
+
+* <kbd>Alt+Shift+F</kbd> - refuel entity hovered by cursor
+* <kbd>Ctrl+Alt+Shift+F</kbd> - refuel everything in reach
+* <kbd>Alt+Shift+U</kbd> - refuel closest entity
+
+You should also know [Tutorial:Keyboard shortcuts](https://wiki.factorio.com/Tutorial:Keyboard_shortcuts) and [TIL all the keyboard shortcuts](https://www.reddit.com/r/factorio/comments/5odbdf/til_all_the_keyboard_shortcuts/).
+
+Console commands
+----------------
+
+These commands can be entered via the console (press `` ` ``). The intended way to call these functions is to use voice recognition software - see *Relevant Software* heading below - to turn voice commands into text shortcuts which type them in.
+
+### Available commands
+
+**Warning:** The API for these commands is unstable and subject to change.
+
+| What                                 | Command                                                                                  | Notes |
+|--------------------------------------|------------------------------------------------------------------------------------------|-------|
+| Grab item from inventory into cursor | `a11y_api.grab(game.player, <item_name>)`                                                |       |
+| Craft an item                        | `a11y_api.start_crafting(game.player, {item_name=<item_name>, item_count=<item_count>})` |       |
+
+### Argument explanations
+
+| Argument    | Explanation                                                                                                                           |
+|-------------|---------------------------------------------------------------------------------------------------------------------------------------|
+| `item_name` | [Prototype name](https://wiki.factorio.com/Data.raw#item) of an item. Use the *Explain* hotkey command (see above) to discover these. |
+| `*_count`   | A numeric count for something. It's usually obvious from the command what this does.                                                  |
 
 Todo list
 ---------
