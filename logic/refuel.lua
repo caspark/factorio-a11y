@@ -12,7 +12,7 @@ local get_burners_to_fuel_categories =
         local entities = {}
         for name, prototype in pairs(game.entity_prototypes) do
             if prototype.burner_prototype then
-                accepted_fuel_categories = {}
+                local accepted_fuel_categories = {}
                 for fuel_category, accepted in pairs(prototype.burner_prototype.fuel_categories) do
                     if accepted then
                         table.insert(accepted_fuel_categories, fuel_category)
@@ -138,8 +138,6 @@ end
 -- 1. error message if refueling failed or `nil` if it succeeded
 -- 2. `SimpleItemStack` containing the fuel name and count refueled with
 function M.refuel_target(player, target, refuel_count)
-    local all_item_prototypes = game.item_prototypes
-
     local target_fuel_inventory = target.get_inventory(defines.inventory.fuel)
     if not target_fuel_inventory then
         return q(target.name) .. " does not take fuel!"

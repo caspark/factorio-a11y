@@ -1,6 +1,5 @@
 local Event = require("__stdlib__/stdlib/event/event")
 local Table = require("__stdlib__/stdlib/utils/table")
-local String = require("__stdlib__/stdlib/utils/string")
 
 local Refuel = require("logic/refuel")
 local Mine = require("logic/mine")
@@ -32,7 +31,10 @@ end
 -- we need to receive actual text (e.g. the names of items).
 
 -- get an item from inventory by name
-function grab(player, item_name)
+
+a11y_api = {}
+
+function a11y_api.grab(player, item_name)
     local ok, stack =
         pcall(
         function()
@@ -53,7 +55,7 @@ function grab(player, item_name)
 end
 
 -- begin crafting a given item for a given count
-function start_crafting(player, opts)
+function a11y_api.start_crafting(player, opts)
     setmetatable(opts, {__index = {count = 5}})
     local item_name = opts.item_name
     local count_asked = opts.count
@@ -64,7 +66,7 @@ function start_crafting(player, opts)
     elseif count_available < count_asked then
         -- we can't craft them all, but craft as many as we can
         local count_crafting = player.begin_crafting {recipe = item_name, count = count_available}
-        player.print("Crafting " .. count_available .. " (not " .. count_asked .. ") of " .. q(item_name))
+        player.print("Crafting " .. count_crafting .. " (not " .. count_asked .. ") of " .. q(item_name))
     else
         player.begin_crafting {recipe = item_name, count = count_asked}
     end
@@ -75,7 +77,7 @@ end
 
 Event.register(
     defines.events.on_tick,
-    function(event)
+    function(_event)
         for _, player in pairs(game.players) do
             -- do any game state updates first to avoid UI being out of date
             Run.try_move_player_along_path(player)
@@ -104,7 +106,7 @@ Event.register(
 
 -- ============== Selection tool handling ==============
 
-function handle_run_tool(player, area, is_alt_selection)
+local function handle_run_tool(player, area, _is_alt_selection)
     local selected_entities = player.surface.find_entities(area)
     if #selected_entities > 0 then
         local target = selected_entities[1]
@@ -115,7 +117,7 @@ function handle_run_tool(player, area, is_alt_selection)
         player.print("Running to highlighted " .. q(target.name))
         Run.run_to_target(player, target)
     else
-        target = area.left_top
+        local target = area.left_top
         player.print("Running to position " .. target.x .. "," .. target.y)
         Run.run_to_target(player, target)
     end
@@ -139,7 +141,7 @@ Event.register(
 -- ============== Hotkey handling ==============
 
 -- print out the name of the held or selected item
-function hotkey_explain_selection(player)
+local function hotkey_explain_selection(player)
     if player.cursor_stack and player.cursor_stack.valid_for_read then
         player.print("That is " .. q(player.cursor_stack.name) .. " (cursor stack)")
     elseif player.selected then
@@ -149,7 +151,7 @@ function hotkey_explain_selection(player)
     end
 end
 
-function hotkey_grab_runtool(player)
+local function hotkey_grab_runtool(player)
     if player.clean_cursor() then
         player.cursor_stack.set_stack({name = "runtool"})
     end
@@ -157,7 +159,7 @@ end
 
 -- mine the resource or tree closest to the player instantly
 -- (again, would be nice to do a regular mining action but doesn't seem possible)
-function hotkey_mine_closest_resource(player)
+local function hotkey_mine_closest_resource(player)
     local target = Mine.get_closest_reachable_resource(player)
     if not target then
         player.print("No resource in range to mine!")
@@ -173,7 +175,7 @@ end
 -- (would be nice to do a regular mining action but doesn't seem possible
 -- without locking cursor into place and hold right click, which is very
 -- annoying when using eye tracking!)
-function hotkey_mine_selection(player)
+local function hotkey_mine_selection(player)
     local target = player.selected
     if not target then
         player.print("No cursor selection to mine!")
@@ -190,7 +192,7 @@ function hotkey_mine_selection(player)
 end
 
 -- mine the tile which the player is standing on
-function hotkey_mine_tile_under_player(player)
+local function hotkey_mine_tile_under_player(player)
     local to_mine = player.surface.get_tile(player.position)
     if to_mine then
         local to_mine_name = to_mine.prototype.name
@@ -202,7 +204,7 @@ function hotkey_mine_tile_under_player(player)
     end
 end
 
-function hotkey_refuel_closest(player)
+local function hotkey_refuel_closest(player)
     local target = Refuel.get_closest_refuelable_entity(player)
     if target then
         local error, stack = Refuel.refuel_target(player, target, 20)
@@ -216,7 +218,7 @@ function hotkey_refuel_closest(player)
     end
 end
 
-function hotkey_refuel_everything(player)
+local function hotkey_refuel_everything(player)
     local targets = Refuel.get_all_reachable_refuelable_entities(player)
     local targets_count = #targets
     if targets_count > 0 then
@@ -257,7 +259,7 @@ function hotkey_refuel_everything(player)
     end
 end
 
-function hotkey_refuel_selection(player)
+local function hotkey_refuel_selection(player)
     local target = player.selected
     if target then
         local error, stack = Refuel.refuel_target(player, target, 20)

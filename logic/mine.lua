@@ -73,9 +73,6 @@ function M.render_ui(player)
     local normal_reach = player.reach_distance
     local resource_reach = player.resource_reach_distance
 
-    local normal_reach_area = Area.adjust({player.position, player.position}, {normal_reach, normal_reach})
-    local resource_reach_area = Area.adjust({player.position, player.position}, {resource_reach, resource_reach})
-
     local closest_reachable_resource = M.get_closest_reachable_resource(player)
     local closest_reachable_building = M.get_closest_reachable_building(player)
 

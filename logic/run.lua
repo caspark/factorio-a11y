@@ -32,7 +32,7 @@ function M.run_to_target(player, target)
         return
     end
 
-    local target_position = 0
+    local target_position
     local how_close = 0
 
     if Is.Object(target) then
@@ -118,7 +118,7 @@ function M.try_move_player_along_path(player)
         local next_waypoint_dist = Position.distance(old_player_pos, next_waypoint.position)
         local travel_dist_left = travel_power_left * player.character_running_speed
 
-        local new_player_pos = nil
+        local new_player_pos
         if travel_dist_left >= next_waypoint_dist then
             -- this step is moving the player straight to the next waypoint
             new_player_pos = next_waypoint.position
