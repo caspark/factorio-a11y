@@ -72,11 +72,19 @@ You should also know [Tutorial:Keyboard shortcuts](https://wiki.factorio.com/Tut
 Console commands
 ----------------
 
-These commands can be entered via the console (press `` ` ``). The intended way to call these functions is to use voice recognition software - see *Relevant Software* heading below - to turn voice commands into text shortcuts which type them in.
+**Warning:** The API for these commands is unstable and subject to change.
+
+These commands can be entered via the console (press `` ` ``) and should be automated via your voice grammar; for example:
+
+```lua
+-- have your grammar press backtick, wait 10ms, then type:
+/sc __A11y__ a11y_api.grab(game.player, 'stone-furnace')
+-- or instead try
+/sc __A11y__ a11y_api.start_crafting(game.player, {item_name='stone-furnace', count=1})
+-- then have your grammar press enter to submit the command
+```
 
 ### Available commands
-
-**Warning:** The API for these commands is unstable and subject to change.
 
 | What                                 | Command                                                                                  | Notes |
 |--------------------------------------|------------------------------------------------------------------------------------------|-------|
