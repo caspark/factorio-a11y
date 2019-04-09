@@ -32,6 +32,11 @@ data:extend(
         },
         {
             type = "custom-input",
+            name = "hotkey-refuel-everything",
+            key_sequence = "CONTROL + SHIFT + ALT + F"
+        },
+        {
+            type = "custom-input",
             name = "hotkey-refuel-closest",
             key_sequence = "SHIFT + ALT + U"
         }

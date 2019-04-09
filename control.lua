@@ -205,7 +205,53 @@ end
 function hotkey_refuel_closest(player)
     local target = Refuel.get_closest_refuelable_entity(player)
     if target then
-        Refuel.refuel_target(player, target, 20)
+        local error, stack = Refuel.refuel_target(player, target, 20)
+        if error ~= nil then
+            player.print(error)
+        else
+            player.print("Refueled closest " .. q(target.name) .. " with " .. stack.count .. " " .. q(stack.name))
+        end
+    else
+        player.print("Nothing in reach which can be refueled!")
+    end
+end
+
+function hotkey_refuel_everything(player)
+    local targets = Refuel.get_all_reachable_refuelable_entities(player)
+    local targets_count = #targets
+    if targets_count > 0 then
+        local refueled_count = 0
+        local fuel_used = {}
+        local last_failure = nil
+        for _, target in pairs(targets) do
+            local error, stack = Refuel.refuel_target(player, target, 20)
+            if error == nil then
+                if fuel_used[stack.name] == nil then
+                    fuel_used[stack.name] = stack.count
+                else
+                    fuel_used[stack.name] = fuel_used[stack.name] + stack.count
+                end
+                refueled_count = refueled_count + 1
+            else
+                last_failure = error
+            end
+        end
+        if refueled_count == 0 then
+            player.print("Failed to refuel anything; last failure reason was:\n" .. last_failure)
+        else
+            local fuel_used_descs = {}
+            for fuel_name, count in pairs(fuel_used) do
+                table.insert(fuel_used_descs, count .. " " .. fuel_name)
+            end
+            local fuel_used_msg = (", "):join(fuel_used_descs)
+            if refueled_count == targets_count then
+                player.print("Refueled all " .. targets_count .. " entities in reach using " .. fuel_used_msg)
+            else
+                local msg = "Refueled " .. refueled_count .. " of " .. targets_count .. " entities using "
+                msg = msg .. fuel_used_msg .. "; last failure reason was:\n" .. last_failure
+                player.print(msg)
+            end
+        end
     else
         player.print("Nothing in reach which can be refueled!")
     end
@@ -214,7 +260,12 @@ end
 function hotkey_refuel_selection(player)
     local target = player.selected
     if target then
-        Refuel.refuel_target(player, target, 20)
+        local error, stack = Refuel.refuel_target(player, target, 20)
+        if error ~= nil then
+            player.print(error)
+        else
+            player.print("Refueled hovered " .. q(target.name) .. " with " .. stack.count .. " " .. q(stack.name))
+        end
     else
         player.print("No cursor selection to refuel!")
     end
@@ -227,6 +278,7 @@ local hotkey_actions = {
     ["hotkey-mine-selection"] = hotkey_mine_selection,
     ["hotkey-mine-tile-under-player"] = hotkey_mine_tile_under_player,
     ["hotkey-refuel-closest"] = hotkey_refuel_closest,
+    ["hotkey-refuel-everything"] = hotkey_refuel_everything,
     ["hotkey-refuel-selection"] = hotkey_refuel_selection
 }
 Event.register(

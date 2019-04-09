@@ -101,20 +101,32 @@ end
 
 local M = {}
 
-function M.get_closest_refuelable_entity(player)
+function M.get_all_reachable_refuelable_entities(player)
     local reach_area = Area.adjust({player.position, player.position}, {player.reach_distance, player.reach_distance})
     local fuelable_things = Table.keys(get_burners_to_fuel_categories())
     local all_fuelable = player.surface.find_entities_filtered {area = reach_area, name = fuelable_things}
 
-    local closest_fuelable = nil
-    local closest_dist = math.huge
+    local results = {}
     if all_fuelable then
         for _, fuelable in pairs(all_fuelable) do
-            local dist = Position.distance_squared(player.position, fuelable.position)
-            if dist < closest_dist and player.can_reach_entity(fuelable) then
-                closest_dist = dist
-                closest_fuelable = fuelable
+            if player.can_reach_entity(fuelable) then
+                table.insert(results, fuelable)
             end
+        end
+    end
+    return results
+end
+
+function M.get_closest_refuelable_entity(player)
+    local reachable_fuelables = M.get_all_reachable_refuelable_entities(player)
+
+    local closest_fuelable = nil
+    local closest_dist = math.huge
+    for _, fuelable in pairs(reachable_fuelables) do
+        local dist = Position.distance_squared(player.position, fuelable.position)
+        if dist < closest_dist then
+            closest_dist = dist
+            closest_fuelable = fuelable
         end
     end
     return closest_fuelable
@@ -122,19 +134,20 @@ end
 
 -- Refuel `target` using up to `refuel_count` fuel from the inventory of `player`.
 -- Better fuel will be used first.
+-- Returns 2 values:
+-- 1. error message if refueling failed or `nil` if it succeeded
+-- 2. `SimpleItemStack` containing the fuel name and count refueled with
 function M.refuel_target(player, target, refuel_count)
     local all_item_prototypes = game.item_prototypes
 
     local target_fuel_inventory = target.get_inventory(defines.inventory.fuel)
     if not target_fuel_inventory then
-        player.print(q(target.name) .. " does not take fuel!")
-        return
+        return q(target.name) .. " does not take fuel!"
     end
 
     local fuel_names = get_burners_to_fuel_names()[target.name]
     if not fuel_names then
-        player.print(q(target.name) .. " can't be refueled - no fuel exists for it in the game!")
-        return
+        return q(target.name) .. " can't be refueled - no fuel exists for it in the game!"
     end
     Logger.log("Acceptable fuel for " .. q(target.name) .. ": " .. q_list(fuel_names))
 
@@ -148,7 +161,8 @@ function M.refuel_target(player, target, refuel_count)
 
             local fuel_loaded_count = target_fuel_inventory.insert({name = fuel_name, count = refuel_count})
             if fuel_loaded_count > 0 then
-                local removed_count = player.get_main_inventory().remove({name = fuel_name, count = fuel_loaded_count})
+                local used_fuel = {name = fuel_name, count = fuel_loaded_count}
+                local removed_count = player.get_main_inventory().remove(used_fuel)
                 if removed_count ~= fuel_loaded_count then
                     -- despite our earlier checks, we've added more fuel to the target than we had
                     -- in our inventory, so we've made fuel out of nothing.
@@ -159,10 +173,8 @@ function M.refuel_target(player, target, refuel_count)
                     Logger.log(msg)
                 end
 
-                player.print("Refueled " .. q(target.name) .. " with " .. fuel_loaded_count .. " " .. q(fuel_name))
-
                 ---- now we're all done!
-                return
+                return nil, used_fuel
             else
                 -- We failed to load in what we tried to load, despite the target accepting this fuel.
                 -- This can happen when e.g. there's coal in the target with no empty slots in its
@@ -194,12 +206,12 @@ function M.refuel_target(player, target, refuel_count)
     local msg = "Can't refuel " .. q(target.name) .. " - "
     if has_fuels_in_use then
         if player_has_all_fuels then
-            player.print(msg .. "it is fully refueled already!")
+            return msg .. "it is fully refueled already!"
         else
-            player.print(msg .. "it's burning " .. q_list(fuels_in_use) .. " and you have none")
+            return msg .. "it's burning " .. q_list(fuels_in_use) .. " and you have none"
         end
     else
-        player.print(msg .. "don't have any " .. q_list(fuel_names) .. " fuel")
+        return msg .. "don't have any " .. q_list(fuel_names) .. " fuel"
     end
 end
 
