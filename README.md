@@ -43,21 +43,27 @@ To make it easier to predict what your voice commands will do, A11y adds several
 Hotkeys
 -------
 
-Utility:
+### Utility
 
 * <kbd>Alt+Shift+W</kbd> - the "*Explain*" command; print out name of item in hand or entity hovered by cursor
 
-Movement:
+### Movement
 
 * <kbd>Alt+Shift+R</kbd> then left click - run to clicked tile or entity
 
-Mining:
+You might also want to bind commands in your voice grammar of <samp>run ( north | west | south | east )</samp> to hold down <kbd>W/A/S/D</kbd> for you.
+
+### Mining
+
+Mining covers removing builds, getting resources, and removing tiles.
 
 * <kbd>Alt+Shift+E</kbd> - mine closest resource (ore, rock, tree, etc)
 * <kbd>Alt+Shift+M</kbd> - mine resource or entity hovered by cursor
 * <kbd>Alt+Shift+T</kbd> - mine tile directly under player (brick, concrete, etc)
 
-Fueling (burner miners/inserters, stone furnaces, cars, etc):
+#### Refueling
+
+Refueling covers putting fuel into burner miners/inserters, stone furnaces, cars, etc. The best fuel available in your inventory is always used, unless there is already fuel in the entity, in which case more fuel of that type is added.
 
 * <kbd>Alt+Shift+F</kbd> - refuel entity hovered by cursor
 * <kbd>Ctrl+Alt+Shift+F</kbd> - refuel everything in reach
@@ -85,6 +91,18 @@ These commands can be entered via the console (press `` ` ``). The intended way 
 |-------------|---------------------------------------------------------------------------------------------------------------------------------------|
 | `item_name` | [Prototype name](https://wiki.factorio.com/Data.raw#item) of an item. Use the *Explain* hotkey command (see above) to discover these. |
 | `*_count`   | A numeric count for something. It's usually obvious from the command what this does.                                                  |
+
+Recommended Grammar
+-------------------
+
+A11y assumes you already have voice commands for clicking, right clicking, hitting individual keys (to open/close inventory/map/etc).
+
+You may also want to bind the following for easier inventory management:
+
+* <samp>copy</samp> to Shift Left Click
+* <samp>paste</samp> to Shift Right Click
+* <samp>transfer</samp> to Ctrl Left Click
+* <samp>split</samp> to Ctrl Right Click
 
 Todo list
 ---------
