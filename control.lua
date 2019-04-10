@@ -167,7 +167,19 @@ local function hotkey_mine_closest_resource(player)
     end
     local target_name = target.prototype.name
     if player.mine_entity(target) then
-        player.print("Mined closest " .. q(target_name))
+        player.print("Mined closest resource " .. q(target_name))
+    end
+end
+
+local function hotkey_mine_closest_building(player)
+    local target = Mine.get_closest_reachable_building(player)
+    if not target then
+        player.print("No building in range to mine!")
+        return
+    end
+    local target_name = target.prototype.name
+    if player.mine_entity(target) then
+        player.print("Mined closest building " .. q(target_name))
     end
 end
 
@@ -276,6 +288,7 @@ end
 local hotkey_actions = {
     ["hotkey-explain-selection"] = hotkey_explain_selection,
     ["hotkey-get-runtool"] = hotkey_grab_runtool,
+    ["hotkey-mine-closest-building"] = hotkey_mine_closest_building,
     ["hotkey-mine-closest-resouce"] = hotkey_mine_closest_resource,
     ["hotkey-mine-selection"] = hotkey_mine_selection,
     ["hotkey-mine-tile-under-player"] = hotkey_mine_tile_under_player,

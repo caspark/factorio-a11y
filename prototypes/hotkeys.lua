@@ -12,6 +12,11 @@ data:extend(
         },
         {
             type = "custom-input",
+            name = "hotkey-mine-closest-building",
+            key_sequence = "SHIFT + ALT + B"
+        },
+        {
+            type = "custom-input",
             name = "hotkey-mine-closest-resouce",
             key_sequence = "SHIFT + ALT + E"
         },

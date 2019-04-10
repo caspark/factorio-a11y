@@ -37,7 +37,7 @@ To make it easier to predict what your voice commands will do, A11y adds several
 * The outer green circle is your reach for picking up items, mining and placing buildings.
 * The inner green circle is your reach for mining resources
 * The red circle denotes your closest resource (what <kbd>Alt+Shift+E</kbd> would mine)
-* The orange circle denotes your closest building
+* The orange circle denotes your closest building (what <kbd>Alt+Shift+B</kbd> would mine)
 * The yellow circle denotes your closest refuelable entity (what <kbd>Alt+Shift+F</kbd> would refuel)
 
 Hotkeys
@@ -56,6 +56,7 @@ Hotkeys
 Mining covers removing builds, getting resources, and removing tiles.
 
 * <kbd>Alt+Shift+E</kbd> - mine closest resource (ore, rock, tree, etc)
+* <kbd>Alt+Shift+B</kbd> - mine closest building
 * <kbd>Alt+Shift+M</kbd> - mine resource or entity hovered by cursor
 * <kbd>Alt+Shift+T</kbd> - mine tile directly under player (brick, concrete, etc)
 
