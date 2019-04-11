@@ -81,24 +81,26 @@ These commands can be entered via the console (press `` ` ``) and should be auto
 -- have your grammar press backtick, wait 10ms, then type:
 /sc __A11y__ a11y_api.grab(game.player, 'stone-furnace')
 -- or instead try
-/sc __A11y__ a11y_api.start_crafting(game.player, {item_name='stone-furnace', count=1})
+/sc __A11y__ a11y_api.craft_item(game.player, 'stone-furnace', 1)
 -- then have your grammar press enter to submit the command
 ```
 
 ### Available commands
 
-| What                                 | Command                                                                                  |  |
-|--------------------------------------|------------------------------------------------------------------------------------------|--|
-| Grab item from inventory into cursor | `a11y_api.grab(game.player, <item_name>)`                                                |  |
-| Craft an item                        | `a11y_api.start_crafting(game.player, {item_name=<item_name>, item_count=<item_count>})` |  |
-| Count item in inventory              | `a11y_api.count_item(player, <item_name>)`                                               |  |
+| What                                 | Command                                         |
+|--------------------------------------|-------------------------------------------------|
+| Grab item from inventory into cursor | `a11y_api.grab(game.player, <item_name>)`       |
+| Craft an item                        | `a11y_api.craft_item(game.player, <item_name>)` |
+| Count item in inventory              | `a11y_api.count_item(player, <item_name>)`      |
 
 ### Argument explanations
 
-| Argument    | Explanation                                                                                                                           |
-|-------------|---------------------------------------------------------------------------------------------------------------------------------------|
-| `item_name` | [Prototype name](https://wiki.factorio.com/Data.raw#item) of an item. Use the *Explain* hotkey command (see above) to discover these. |
-| `*_count`   | A numeric count for something. It's usually obvious from the command what this does.                                                  |
+| Argument    | Type    | Explanation                                                        |
+|-------------|---------|--------------------------------------------------------------------|
+| `item_name` | String  | [Item prototype name]. Use the *Explain* hotkey to discover these. |
+| `*_count`   | Integer | A numeric count for something (e.g. amount to craft.)              |
+
+[Item prototype name]: https://wiki.factorio.com/Data.raw#item
 
 Recommended Grammar
 -------------------
@@ -127,12 +129,12 @@ Todo list
 * Commands that require input should probably have a hotkey to open a text box for input to avoid disabling achievements unnecessarily.
 * Restore the thing in hand after a "run there"
 * When mining nearest resource, prefer mining things that collide with the player (e.g. trees & rocks) for convenience in clearing a path.
+* Add support for selection being determined by player ghost (for explain & craft selection commands)
 
 ### New Features
 
 * Have a way to grab all of an item in range quickly (both from floor and from inventories of items)
 * Have a way to mine everything in range quickly (for clearing trees)
-* Have a way to craft what's in cursor (as a ghost or regular) or hovered over
 * Have a way to lay belt (assuming belt is in hand) from first to last click (assuming it's in a row). Maybe show a cross of visual lines as a guide to help line up tiles? Will probably need to check that each tile can be built before starting, and if we fail to build anything then stop building and print an error.
 * Allow aliasing virtual items when crafting or grabbing? E.g. "craft/grab electric"
 

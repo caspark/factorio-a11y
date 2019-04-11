@@ -55,7 +55,7 @@ function a11y_api.grab(player, item_name)
 end
 
 -- begin crafting a given item for a given count
-function a11y_api.start_crafting(player, item_name, item_count)
+function a11y_api.craft_item(player, item_name, item_count)
     local count_available = player.get_craftable_count(item_name)
     if count_available == 0 then
         player.print("Missing ingredients for crafting any " .. q(item_name))
@@ -65,6 +65,17 @@ function a11y_api.start_crafting(player, item_name, item_count)
         player.print("Crafting " .. count_crafting .. " (not " .. item_count .. ") of " .. q(item_name))
     else
         player.begin_crafting {recipe = item_name, count = item_count}
+    end
+end
+
+-- begin crafting either the held or hovered item for a given count
+function a11y_api.craft_selection(player, item_count)
+    if player.cursor_stack and player.cursor_stack.valid_for_read then
+        a11y_api.craft_item(player, player.cursor_stack.name, item_count)
+    elseif player.selected then
+        a11y_api.craft_item(player, player.selected.name, item_count)
+    else
+        player.print("No idea what that is so can't craft it")
     end
 end
 
@@ -148,9 +159,9 @@ Event.register(
 -- print out the name of the held or selected item
 local function hotkey_explain_selection(player)
     if player.cursor_stack and player.cursor_stack.valid_for_read then
-        player.print("That is " .. q(player.cursor_stack.name) .. " (cursor stack)")
+        player.print("Holding " .. q(player.cursor_stack.name) .. " in cursor")
     elseif player.selected then
-        player.print("That is " .. q(player.selected.name) .. " (selected)")
+        player.print("Hovering " .. q(player.selected.name) .. " with cursor")
     else
         player.print("No idea what that is :(")
     end
