@@ -4,6 +4,7 @@ local Table = require("__stdlib__/stdlib/utils/table")
 local Refuel = require("logic/refuel")
 local Mine = require("logic/mine")
 local Run = require("logic/run")
+local Selection = require("logic/selection")
 
 -- ============== Global helpers ==============
 
@@ -70,10 +71,9 @@ end
 
 -- begin crafting either the held or hovered item for a given count
 function a11y_api.craft_selection(player, item_count)
-    if player.cursor_stack and player.cursor_stack.valid_for_read then
-        a11y_api.craft_item(player, player.cursor_stack.name, item_count)
-    elseif player.selected then
-        a11y_api.craft_item(player, player.selected.name, item_count)
+    local item_name, _source = Selection.player_selection(player)
+    if item_name then
+        a11y_api.craft_item(player, item_name, item_count)
     else
         player.print("No idea what that is so can't craft it")
     end
@@ -158,10 +158,15 @@ Event.register(
 
 -- print out the name of the held or selected item
 local function hotkey_explain_selection(player)
-    if player.cursor_stack and player.cursor_stack.valid_for_read then
-        player.print("Holding " .. q(player.cursor_stack.name) .. " in cursor")
-    elseif player.selected then
-        player.print("Hovering " .. q(player.selected.name) .. " with cursor")
+    local item_name, source = Selection.player_selection(player)
+    if source == Selection.source.CURSOR_HELD then
+        player.print("Holding " .. q(item_name) .. " in cursor")
+    elseif source == Selection.source.CURSOR_GHOST then
+        player.print("Holding ghost of " .. q(item_name) .. " in cursor")
+    elseif source == Selection.source.HOVERED_GHOST then
+        player.print("Hovering over ghost of " .. q(item_name))
+    elseif source == Selection.source.HOVERED then
+        player.print("Hovering over " .. q(item_name))
     else
         player.print("No idea what that is :(")
     end

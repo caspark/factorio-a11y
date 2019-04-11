@@ -129,7 +129,6 @@ Todo list
 * Commands that require input should probably have a hotkey to open a text box for input to avoid disabling achievements unnecessarily.
 * Restore the thing in hand after a "run there"
 * When mining nearest resource, prefer mining things that collide with the player (e.g. trees & rocks) for convenience in clearing a path.
-* Add support for selection being determined by player ghost (for explain & craft selection commands)
 
 ### New Features
 
