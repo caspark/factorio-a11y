@@ -72,6 +72,15 @@ function a11y_api.start_crafting(player, opts)
     end
 end
 
+-- print out how many items of a given type are in inventory and craftable
+function a11y_api.count_item(player, item_name)
+    local count_owned = player.get_item_count(item_name)
+    local count_craftable = player.get_craftable_count(item_name)
+    local msg = count_owned .. " of " .. q(item_name)
+    msg = msg .. " in inventory (additional " .. count_craftable .. " craftable)"
+    player.print(msg)
+end
+
 -- ============== On Tick event ==============
 -- (for efficiency and clarity of control flow, we register only one on-tick handler)
 

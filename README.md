@@ -87,10 +87,11 @@ These commands can be entered via the console (press `` ` ``) and should be auto
 
 ### Available commands
 
-| What                                 | Command                                                                                  | Notes |
-|--------------------------------------|------------------------------------------------------------------------------------------|-------|
-| Grab item from inventory into cursor | `a11y_api.grab(game.player, <item_name>)`                                                |       |
-| Craft an item                        | `a11y_api.start_crafting(game.player, {item_name=<item_name>, item_count=<item_count>})` |       |
+| What                                 | Command                                                                                  |  |
+|--------------------------------------|------------------------------------------------------------------------------------------|--|
+| Grab item from inventory into cursor | `a11y_api.grab(game.player, <item_name>)`                                                |  |
+| Craft an item                        | `a11y_api.start_crafting(game.player, {item_name=<item_name>, item_count=<item_count>})` |  |
+| Count item in inventory              | `a11y_api.count_item(player, <item_name>)`                                               |  |
 
 ### Argument explanations
 
@@ -131,7 +132,6 @@ Todo list
 
 * Have a way to grab all of an item in range quickly (both from floor and from inventories of items)
 * Have a way to mine everything in range quickly (for clearing trees)
-* Have a way to print how many of an item you have in inventory (maybe also how many you can craft?)
 * Have a way to craft what's in cursor (as a ghost or regular) or hovered over
 * Have a way to lay belt (assuming belt is in hand) from first to last click (assuming it's in a row). Maybe show a cross of visual lines as a guide to help line up tiles? Will probably need to check that each tile can be built before starting, and if we fail to build anything then stop building and print an error.
 * Allow aliasing virtual items when crafting or grabbing? E.g. "craft/grab electric"
