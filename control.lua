@@ -55,20 +55,16 @@ function a11y_api.grab(player, item_name)
 end
 
 -- begin crafting a given item for a given count
-function a11y_api.start_crafting(player, opts)
-    setmetatable(opts, {__index = {count = 5}})
-    local item_name = opts.item_name
-    local count_asked = opts.count
-
+function a11y_api.start_crafting(player, item_name, item_count)
     local count_available = player.get_craftable_count(item_name)
     if count_available == 0 then
         player.print("Missing ingredients for crafting any " .. q(item_name))
-    elseif count_available < count_asked then
+    elseif count_available < item_count then
         -- we can't craft them all, but craft as many as we can
         local count_crafting = player.begin_crafting {recipe = item_name, count = count_available}
-        player.print("Crafting " .. count_crafting .. " (not " .. count_asked .. ") of " .. q(item_name))
+        player.print("Crafting " .. count_crafting .. " (not " .. item_count .. ") of " .. q(item_name))
     else
-        player.begin_crafting {recipe = item_name, count = count_asked}
+        player.begin_crafting {recipe = item_name, count = item_count}
     end
 end
 
