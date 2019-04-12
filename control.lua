@@ -416,8 +416,8 @@ local function hotkey_command_window_hide(player)
 end
 
 local hotkey_actions = {
-    ["hotkey-command-window-show"] = hotkey_command_window_show,
     ["hotkey-command-window-hide"] = hotkey_command_window_hide,
+    ["hotkey-command-window-show"] = hotkey_command_window_show,
     ["hotkey-explain-selection"] = hotkey_explain_selection,
     ["hotkey-get-runtool"] = hotkey_grab_runtool,
     ["hotkey-mine-closest-building"] = hotkey_mine_closest_building,
