@@ -31,10 +31,9 @@ end
 -- create our own console-lite? Unfortunately hotkeys won't easily work here because
 -- we need to receive actual text (e.g. the names of items).
 
--- get an item from inventory by name
-
 a11y_api = {}
 
+-- get an item from inventory by name
 function a11y_api.grab(player, item_name)
     local ok, stack =
         pcall(
