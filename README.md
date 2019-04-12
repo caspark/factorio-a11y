@@ -126,7 +126,7 @@ Todo list
 ### QoL and papercuts
 
 * When you can't craft something because of missing resources, print out how many of what is missing
-* Commands that require input should probably have a hotkey to open a text box for input to avoid disabling achievements unnecessarily.
+* Commands that require input should probably have a hotkey to open a text box for input to avoid disabling achievements unnecessarily. THIS IS DONE NOW TEST AND DOCUMENT IT
 * Restore the thing in hand after a "run there"
 * When mining nearest resource, prefer mining things that collide with the player (e.g. trees & rocks) for convenience in clearing a path.
 
@@ -237,4 +237,8 @@ http://afforess.github.io/Factorio-Stdlib/index.html
 Attributions
 ------------
 
-* Contains modified icons from Font Awesome, licensed under CC Attributions 4.0 license (https://creativecommons.org/licenses/by/4.0/).
+Thank you to:
+
+* [Factorio stdlib](https://github.com/Afforess/Factorio-Stdlib) - thanks for making Factorio's API much easier to work with.
+* rxi's [json.lua](https://github.com/rxi/json.lua) - thanks for writing a good json library.
+* Font Awesome - this library contains icons modified from Font Awesome, licensed under CC Attributions 4.0 license (https://creativecommons.org/licenses/by/4.0/).
