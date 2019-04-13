@@ -46,6 +46,8 @@ Hotkeys
 ### Utility
 
 * <kbd>Alt+Shift+W</kbd> - the "*Explain*" command; print out name of item in hand or entity hovered by cursor
+* <kbd>Alt+Shift+Y</kbd> - show the A11y text interface (see heading below for more info)
+* <kbd>CtrL+Alt+Shift+Y</kbd> - hide the A11y text interface
 
 ### Movement
 
@@ -70,28 +72,31 @@ Refueling covers putting fuel into burner miners/inserters, stone furnaces, cars
 
 You should also know [Tutorial:Keyboard shortcuts](https://wiki.factorio.com/Tutorial:Keyboard_shortcuts) and [TIL all the keyboard shortcuts](https://www.reddit.com/r/factorio/comments/5odbdf/til_all_the_keyboard_shortcuts/).
 
-Console commands
-----------------
+A11y text interface
+-------------------
 
 **Warning:** The API for these commands is unstable and subject to change.
 
-These commands can be entered via the console (press `` ` ``) and should be automated via your voice grammar; for example:
+Factorio exposes a UI (hit <kbd>Alt+Shift+Y</kbd> to show it) which is used for entering commands which take arguments in JSON format: you should automate entering these via your voice grammar. For example:
 
-```lua
--- have your grammar press backtick, wait 10ms, then type:
-/sc __A11y__ a11y_api.grab(game.player, 'stone-furnace')
+```json
+-- have your grammar press Alt+Shift+Y, wait 10ms, then type:
+["grab", "stone-furnace"]
 -- or instead try
-/sc __A11y__ a11y_api.craft_item(game.player, 'stone-furnace', 1)
+["craft_item", "stone-furnace", 2]
 -- then have your grammar press enter to submit the command
 ```
 
+**NB:** You may be wondering "why bother with this when Factorio already has a console?". 1) So that this mod can be used on multiplayer servers where admins don't want to give console access and 2) Factorio console flashes all past output when it's activated to enter a command and that's really distracting. (Earlier versions of this mod used this approach to get started - it's still useful for prototyping!)
+
 ### Available commands
 
-| What                                 | Command                                         |
-|--------------------------------------|-------------------------------------------------|
-| Grab item from inventory into cursor | `a11y_api.grab(game.player, <item_name>)`       |
-| Craft an item                        | `a11y_api.craft_item(game.player, <item_name>)` |
-| Count item in inventory              | `a11y_api.count_item(player, <item_name>)`      |
+| What                                 | Command                                     |
+|--------------------------------------|---------------------------------------------|
+| Count item in inventory              | `["count_item", <item_name>]`               |
+| Grab item from inventory into cursor | `["grab", <item_name>]`                     |
+| Craft an item                        | `["craft_item", <item_name>, <item_count>]` |
+| Craft item  currently held           | `["craft_selection", <item_count>]`         |
 
 ### Argument explanations
 
@@ -126,7 +131,6 @@ Todo list
 ### QoL and papercuts
 
 * When you can't craft something because of missing resources, print out how many of what is missing
-* Commands that require input should probably have a hotkey to open a text box for input to avoid disabling achievements unnecessarily. THIS IS DONE NOW TEST AND DOCUMENT IT
 * Restore the thing in hand after a "run there"
 * When mining nearest resource, prefer mining things that collide with the player (e.g. trees & rocks) for convenience in clearing a path.
 
