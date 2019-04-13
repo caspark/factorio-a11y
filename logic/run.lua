@@ -20,8 +20,7 @@ function M.run_to_target(player, target)
     -- so instead we find a position near the player which we can path from
     local start_pos =
         player.surface.find_non_colliding_position(
-        -- FIXME it'd be better to use something that's exactly the size of the player's bounding box (0.4x0.4)
-        "wooden-chest", -- prototype name
+        "player", -- prototype name
         player.position, -- center
         .7, -- radius
         0.01, -- precision for search (step size)
@@ -68,7 +67,7 @@ function M.run_to_target(player, target)
 
     local path_id =
         player.surface.request_path {
-        bounding_box = {{-0.2, -0.2}, {0.2, 0.2}}, -- player's collision box according to data.raw
+        bounding_box = player.character.prototype.collision_box,
         collision_mask = {"player-layer"},
         start = start_pos,
         goal = target_position,
@@ -77,11 +76,13 @@ function M.run_to_target(player, target)
         pathfind_flags = {
             allow_destroy_friendly_entities = false,
             cache = false,
-            prefer_straight_paths = true,
+            prefer_straight_paths = false, -- we don't want paths with right angles here
             low_priority = false
         },
         can_open_gates = true,
-        path_resolution_modifier = 1
+        -- resolution of >= 3 seems to be necessary to allow the player to run between
+        -- side-by-side assembly machines.
+        path_resolution_modifier = 3
     }
     Logger.log(
         "Issued pathfinding request to " ..

@@ -96,7 +96,7 @@ Factorio exposes a UI (hit <kbd>Alt+Shift+Y</kbd> to show it) which is used for 
 | Count item in inventory              | `["count_item", <item_name>]`               |
 | Grab item from inventory into cursor | `["grab", <item_name>]`                     |
 | Craft an item                        | `["craft_item", <item_name>, <item_count>]` |
-| Craft item  currently held           | `["craft_selection", <item_count>]`         |
+| Craft item currently held            | `["craft_selection", <item_count>]`         |
 
 ### Argument explanations
 
@@ -143,7 +143,7 @@ Todo list
 
 ### Bugs
 
-* oil is not mineable, so should be filtered out from the mining UI. Is there a generic API for detecting non-mineable objects?
+* oil is not mineable, so should be filtered out from the mining UI. Is there a generic API for detecting non-mineable objects? Looks like the player prototype has a mining_categories field: https://wiki.factorio.com/Prototype/Character
 * Mining resources and buildings should take some time - implement the mining hardness formula for this based on the FF post.
 
 
