@@ -3,7 +3,7 @@ local Event = require("__stdlib__/stdlib/event/event")
 local Game = require("__stdlib__/stdlib/game")
 local Position = require("__stdlib__/stdlib/area/position")
 
-local Categories = require("utils/categories")
+local Categories = require("__A11y__/logic/utils/categories")
 
 local function request_ui_rerender(player)
     Game.get_or_set_data("mine", player.index, "force_rerender", true, true)
@@ -156,11 +156,13 @@ function M.render_ui(player)
     end
 end
 
-Event.register(
-    defines.events.on_player_mined_item,
-    function(event)
-        request_ui_rerender(game.players[event.player_index])
-    end
-)
+function M.register_event_handlers()
+    Event.register(
+        defines.events.on_player_mined_item,
+        function(event)
+            request_ui_rerender(game.players[event.player_index])
+        end
+    )
+end
 
 return M

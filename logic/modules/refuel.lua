@@ -257,11 +257,13 @@ function M.render_ui(player)
     end
 end
 
-Event.register(
-    defines.events.on_player_mined_item,
-    function(event)
-        request_ui_rerender(game.players[event.player_index])
-    end
-)
+function M.register_event_handlers()
+    Event.register(
+        defines.events.on_player_mined_item,
+        function(event)
+            request_ui_rerender(game.players[event.player_index])
+        end
+    )
+end
 
 return M

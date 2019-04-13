@@ -5,6 +5,14 @@ local Position = require("__stdlib__/stdlib/area/position")
 
 local M = {}
 
+-- replace whatever the user has grabbed with the runtool.
+function M.hotkey_grab_runtool(player)
+    if player.clean_cursor() then
+        player.cursor_stack.set_stack({name = "runtool"})
+    end
+end
+
+-- if the player is moving along a path, stop moving them along it.
 function M.stop_moving_player_along_path(player)
     Game.get_or_set_data("ui", player.index, "force_rerender", true, true)
     Game.get_or_set_data("run", player.index, "path_to_follow", true, nil)
@@ -200,30 +208,74 @@ function M.render_ui(player)
     end
 end
 
-Event.register(
-    defines.events.on_script_path_request_finished,
-    function(event)
-        local path_id = event.id
-        for _, player in pairs(game.players) do
-            if path_id == Game.get_or_set_data("run", player.index, "last_path_id", true, path_id) then
-                if event.try_again_later then
-                    player.print("Pathfinder was too busy - got try again later result for pathfinding")
-                else
-                    -- player.print("Got paths of " .. serpent.block(event))
-                    if event.path then
-                        -- update the path to have a 0th waypoint which is the player's current position
-                        -- (necessary to avoid a jerk at the start of pathing since the path needs to
-                        -- start outside the player's collision box)
-                        event.path[0] = {position = player.position, needs_destroy_to_reach = false}
+function M.register_event_handlers()
+    Event.register(
+        defines.events.on_script_path_request_finished,
+        function(event)
+            local path_id = event.id
+            for _, player in pairs(game.players) do
+                if path_id == Game.get_or_set_data("run", player.index, "last_path_id", true, path_id) then
+                    if event.try_again_later then
+                        player.print("Pathfinder was too busy - got try again later result for pathfinding")
                     else
-                        player.print("Failed to find path!")
-                    end
+                        -- player.print("Got paths of " .. serpent.block(event))
+                        if event.path then
+                            -- update the path to have a 0th waypoint which is the player's current position
+                            -- (necessary to avoid a jerk at the start of pathing since the path needs to
+                            -- start outside the player's collision box)
+                            event.path[0] = {position = player.position, needs_destroy_to_reach = false}
+                        else
+                            player.print("Failed to find path!")
+                        end
 
-                    Game.get_or_set_data("run", player.index, "path_to_follow", true, event.path)
+                        Game.get_or_set_data("run", player.index, "path_to_follow", true, event.path)
+                    end
                 end
             end
         end
-    end
-)
+    )
+
+    Event.register(
+        {
+            defines.events.on_player_selected_area,
+            defines.events.on_player_alt_selected_area
+        },
+        function(e)
+            if e.item ~= "runtool" then
+                return
+            end
+            local player = game.players[e.player_index]
+            local area = e.area
+
+            local selected_entities = player.surface.find_entities(area)
+
+            if #selected_entities > 0 then
+                local target = selected_entities[1]
+                player.print("Running to selected " .. q(target.name))
+                M.run_to_target(player, target)
+            elseif player.selected ~= nil then
+                local target = player.selected
+                player.print("Running to highlighted " .. q(target.name))
+                M.run_to_target(player, target)
+            else
+                local target = area.left_top
+                player.print("Running to position " .. target.x .. "," .. target.y)
+                M.run_to_target(player, target)
+            end
+        end
+    )
+
+    Event.register(
+        {
+            "a11y-hook-player-walked-up",
+            "a11y-hook-player-walked-right",
+            "a11y-hook-player-walked-down",
+            "a11y-hook-player-walked-left"
+        },
+        function(event)
+            M.stop_moving_player_along_path(game.players[event.player_index])
+        end
+    )
+end
 
 return M
