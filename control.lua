@@ -138,6 +138,11 @@ end
 local function dispatch_command(player, command_and_args)
     local command = command_and_args[1]
     local args = command_and_args
+    if not command then
+        player.print("Invalid A11y command:\n" .. serpent.block(command_and_args))
+        return
+    end
+
     Logger.log("Dispatching command " .. q(command) .. " with args of: " .. serpent.block(args))
 
     args[1] = player -- all functions need player as their first arg so add it
