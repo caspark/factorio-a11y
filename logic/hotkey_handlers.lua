@@ -1,22 +1,22 @@
 local Event = require("__stdlib__/stdlib/event/event")
 local Table = require("__stdlib__/stdlib/utils/table")
 
-local Refuel = require("__A11y__/logic/modules/refuel")
 local Mine = require("__A11y__/logic/modules/mine")
+local Refuel = require("__A11y__/logic/modules/refuel")
 local Run = require("__A11y__/logic/modules/run")
-local Selection = require("__A11y__/logic/selection")
+local Selector = require("__A11y__/logic/utils/selector")
 local CommandUI = require("__A11y__/logic/command_ui")
 
 -- print out the name of the held or selected item
 local function hotkey_explain_selection(player)
-    local item_name, source = Selection.player_selection(player)
-    if source == Selection.source.CURSOR_HELD then
+    local item_name, source = Selector.player_selection(player)
+    if source == Selector.source.CURSOR_HELD then
         player.print("Holding " .. q(item_name) .. " in cursor")
-    elseif source == Selection.source.CURSOR_GHOST then
+    elseif source == Selector.source.CURSOR_GHOST then
         player.print("Holding ghost of " .. q(item_name) .. " in cursor")
-    elseif source == Selection.source.HOVERED_GHOST then
+    elseif source == Selector.source.HOVERED_GHOST then
         player.print("Hovering over ghost of " .. q(item_name))
-    elseif source == Selection.source.HOVERED then
+    elseif source == Selector.source.HOVERED then
         player.print("Hovering over " .. q(item_name))
     else
         player.print("No idea what that is :(")

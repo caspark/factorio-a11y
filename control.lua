@@ -25,7 +25,7 @@ function q_list(list_of_s)
 end
 
 -- ============== On Tick event ==============
--- (for efficiency and clarity of control flow, we register only one on-tick handler)
+-- For efficiency and clarity of control flow, we register only one on-tick handler.
 
 Event.register(
     defines.events.on_tick,
