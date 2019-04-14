@@ -12,7 +12,8 @@ local mod_gui = require("mod-gui") -- docs are in data/core/lualib/mod-gui.lua
 local Event = require("__stdlib__/stdlib/event/event")
 
 local Json = require("__A11y__/logic/vendor/json")
-local Command_API = require("__A11y__/logic/command_api")
+
+local command_api = {}
 
 local function get_a11y_command_textfield(player)
     local button_flow = mod_gui.get_button_flow(player)
@@ -46,7 +47,7 @@ local function dispatch_command(player, command_and_args)
     local ok, output_or_error =
         pcall(
         function()
-            return Command_API[command](table.unpack(args))
+            return command_api[command](table.unpack(args))
         end
     )
     if not ok then
@@ -86,6 +87,12 @@ function M.hide_command_window(player)
     local text_field = get_a11y_command_textfield(player)
     text_field.visible = false
     text_field.text = "" -- maybe save a bit of memory if it was a big command
+end
+
+function M.register_commands(commands)
+    for command, func in pairs(commands) do
+        command_api[command] = func
+    end
 end
 
 function M.register_event_handlers()
