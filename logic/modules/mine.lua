@@ -9,9 +9,7 @@ local function request_ui_rerender(player)
     Game.get_or_set_data("mine", player.index, "force_rerender", true, true)
 end
 
-local M = {}
-
-function M.get_closest_reachable_resource(player)
+local function get_closest_reachable_resource(player)
     local resource_reach_area =
         Area.adjust(
         {player.position, player.position},
@@ -34,7 +32,7 @@ function M.get_closest_reachable_resource(player)
     return closest_resource
 end
 
-function M.get_closest_reachable_building(player)
+local function get_closest_reachable_building(player)
     local reach_area = Area.adjust({player.position, player.position}, {player.reach_distance, player.reach_distance})
     local all_buildings =
         player.surface.find_entities_filtered {
@@ -55,6 +53,64 @@ function M.get_closest_reachable_building(player)
     return closest_building
 end
 
+local M = {}
+
+-- mine the resource or tree closest to the player instantly
+function M.mine_closest_resource(player)
+    local target = get_closest_reachable_resource(player)
+    if not target then
+        player.print("No resource in range to mine!")
+        return
+    end
+    local target_name = target.prototype.name
+    if player.mine_entity(target) then
+        player.print("Mined closest resource " .. q(target_name))
+    end
+end
+
+-- mine the closest building
+function M.mine_closest_building(player)
+    local target = get_closest_reachable_building(player)
+    if not target then
+        player.print("No building in range to mine!")
+        return
+    end
+    local target_name = target.prototype.name
+    if player.mine_entity(target) then
+        player.print("Mined closest building " .. q(target_name))
+    end
+end
+
+-- mine the resource or building which the player has selected
+function M.mine_selection(player)
+    local target = player.selected
+    if not target then
+        player.print("No cursor selection to mine!")
+        return
+    end
+    local target_name = target.prototype.name
+    if not player.can_reach_entity(target) then
+        player.print("That " .. q(target_name) .. " is too far away to mine!")
+        return
+    end
+    if player.mine_entity(target) then
+        player.print("Mined selected " .. q(target_name))
+    end
+end
+
+-- mine the tile which the player is standing on
+function M.mine_tile_under_player(player)
+    local to_mine = player.surface.get_tile(player.position)
+    if to_mine then
+        local to_mine_name = to_mine.prototype.name
+        if player.mine_tile(to_mine) then
+            player.print("Mined a " .. to_mine_name)
+        end
+    else
+        player.print("Not standing on a tile!")
+    end
+end
+
 -- render a UI around the player showing their reach
 function M.render_ui(player)
     local ui_last_player_pos = Game.get_or_set_data("mine", player.index, "last_player_pos", false, {x = nil, y = nil})
@@ -73,8 +129,8 @@ function M.render_ui(player)
     local normal_reach = player.reach_distance
     local resource_reach = player.resource_reach_distance
 
-    local closest_reachable_resource = M.get_closest_reachable_resource(player)
-    local closest_reachable_building = M.get_closest_reachable_building(player)
+    local closest_reachable_resource = get_closest_reachable_resource(player)
+    local closest_reachable_building = get_closest_reachable_building(player)
 
     -- get a reference to the grid table, remove any existing drawings, then save new drawings in it
     local ui_ids = Game.get_or_set_data("mine", player.index, "ui_ids", false, {})

@@ -99,9 +99,7 @@ local function request_ui_rerender(player)
     Game.get_or_set_data("refuel", player.index, "force_rerender", true, true)
 end
 
-local M = {}
-
-function M.get_all_reachable_refuelable_entities(player)
+local function get_all_reachable_refuelable_entities(player)
     local reach_area = Area.adjust({player.position, player.position}, {player.reach_distance, player.reach_distance})
     local fuelable_things = Table.keys(get_burners_to_fuel_categories())
     local all_fuelable = player.surface.find_entities_filtered {area = reach_area, name = fuelable_things}
@@ -117,8 +115,8 @@ function M.get_all_reachable_refuelable_entities(player)
     return results
 end
 
-function M.get_closest_refuelable_entity(player)
-    local reachable_fuelables = M.get_all_reachable_refuelable_entities(player)
+local function get_closest_refuelable_entity(player)
+    local reachable_fuelables = get_all_reachable_refuelable_entities(player)
 
     local closest_fuelable = nil
     local closest_dist = math.huge
@@ -137,7 +135,7 @@ end
 -- Returns 2 values:
 -- 1. error message if refueling failed or `nil` if it succeeded
 -- 2. `SimpleItemStack` containing the fuel name and count refueled with
-function M.refuel_target(player, target, refuel_count)
+local function refuel_entity(player, target, refuel_count)
     local target_fuel_inventory = target.get_inventory(defines.inventory.fuel)
     if not target_fuel_inventory then
         return q(target.name) .. " does not take fuel!"
@@ -213,6 +211,77 @@ function M.refuel_target(player, target, refuel_count)
     end
 end
 
+local M = {}
+
+function M.refuel_closest(player)
+    local target = get_closest_refuelable_entity(player)
+    if target then
+        local error, stack = refuel_entity(player, target, 20)
+        if error ~= nil then
+            player.print(error)
+        else
+            player.print("Refueled closest " .. q(target.name) .. " with " .. stack.count .. " " .. q(stack.name))
+        end
+    else
+        player.print("Nothing in reach which can be refueled!")
+    end
+end
+
+function M.refuel_everything(player)
+    local targets = get_all_reachable_refuelable_entities(player)
+    local targets_count = #targets
+    if targets_count > 0 then
+        local refueled_count = 0
+        local fuel_used = {}
+        local last_failure = nil
+        for _, target in pairs(targets) do
+            local error, stack = refuel_entity(player, target, 20)
+            if error == nil then
+                if fuel_used[stack.name] == nil then
+                    fuel_used[stack.name] = stack.count
+                else
+                    fuel_used[stack.name] = fuel_used[stack.name] + stack.count
+                end
+                refueled_count = refueled_count + 1
+            else
+                last_failure = error
+            end
+        end
+        if refueled_count == 0 then
+            player.print("Failed to refuel anything; last failure reason was:\n" .. last_failure)
+        else
+            local fuel_used_descs = {}
+            for fuel_name, count in pairs(fuel_used) do
+                table.insert(fuel_used_descs, count .. " " .. fuel_name)
+            end
+            local fuel_used_msg = (", "):join(fuel_used_descs)
+            if refueled_count == targets_count then
+                player.print("Refueled all " .. targets_count .. " entities in reach using " .. fuel_used_msg)
+            else
+                local msg = "Refueled " .. refueled_count .. " of " .. targets_count .. " entities using "
+                msg = msg .. fuel_used_msg .. "; last failure reason was:\n" .. last_failure
+                player.print(msg)
+            end
+        end
+    else
+        player.print("Nothing in reach which can be refueled!")
+    end
+end
+
+function M.refuel_selection(player)
+    local target = player.selected
+    if target then
+        local error, stack = refuel_entity(player, target, 20)
+        if error ~= nil then
+            player.print(error)
+        else
+            player.print("Refueled hovered " .. q(target.name) .. " with " .. stack.count .. " " .. q(stack.name))
+        end
+    else
+        player.print("No cursor selection to refuel!")
+    end
+end
+
 function M.render_ui(player)
     local ui_last_player_pos =
         Game.get_or_set_data("refuel", player.index, "last_player_pos", false, {x = nil, y = nil})
@@ -228,7 +297,7 @@ function M.render_ui(player)
         Game.get_or_set_data("refuel", player.index, "force_rerender", true, false)
     end
 
-    local closest_refuelable_entity = M.get_closest_refuelable_entity(player)
+    local closest_refuelable_entity = get_closest_refuelable_entity(player)
 
     -- get a reference to the grid table, remove any existing drawings, then save new drawings in it
     local ui_ids = Game.get_or_set_data("refuel", player.index, "ui_ids", false, {})

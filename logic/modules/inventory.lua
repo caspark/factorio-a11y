@@ -1,5 +1,7 @@
 -- Accessibility functions to deal with managing inventories (primarily the player's).
 
+local Selector = require("__A11y__/logic/utils/selector")
+
 local M = {}
 
 -- get an item from inventory by name
@@ -30,6 +32,22 @@ function M.count_item(player, item_name)
     local msg = count_owned .. " of " .. q(item_name)
     msg = msg .. " in inventory (additional " .. count_craftable .. " craftable)"
     player.print(msg)
+end
+
+-- print out the name of the held or selected item
+function M.explain_selection(player)
+    local item_name, source = Selector.player_selection(player)
+    if source == Selector.source.CURSOR_HELD then
+        player.print("Holding " .. q(item_name) .. " in cursor")
+    elseif source == Selector.source.CURSOR_GHOST then
+        player.print("Holding ghost of " .. q(item_name) .. " in cursor")
+    elseif source == Selector.source.HOVERED_GHOST then
+        player.print("Hovering over ghost of " .. q(item_name))
+    elseif source == Selector.source.HOVERED then
+        player.print("Hovering over " .. q(item_name))
+    else
+        player.print("No idea what that is :(")
+    end
 end
 
 return M

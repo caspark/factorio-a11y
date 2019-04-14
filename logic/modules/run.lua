@@ -6,7 +6,7 @@ local Position = require("__stdlib__/stdlib/area/position")
 local M = {}
 
 -- replace whatever the user has grabbed with the runtool.
-function M.hotkey_grab_runtool(player)
+function M.grab_runtool(player)
     if player.clean_cursor() then
         player.cursor_stack.set_stack({name = "runtool"})
     end

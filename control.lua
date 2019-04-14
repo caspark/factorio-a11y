@@ -3,11 +3,11 @@ local Event = require("__stdlib__/stdlib/event/event")
 local Table = require("__stdlib__/stdlib/utils/table")
 
 -- our lua
+local Inventory = require("__A11y__/logic/modules/inventory")
 local Mine = require("__A11y__/logic/modules/mine")
 local Refuel = require("__A11y__/logic/modules/refuel")
 local Run = require("__A11y__/logic/modules/run")
 local Command_UI = require("__A11y__/logic/command_ui")
-local Hotkey_Handlers = require("__A11y__/logic/hotkey_handlers")
 
 -- ============== Global helpers ==============
 
@@ -49,4 +49,24 @@ Mine.register_event_handlers()
 Refuel.register_event_handlers()
 Run.register_event_handlers()
 Command_UI.register_event_handlers()
-Hotkey_Handlers.register_event_handlers()
+
+-- Hotkeys
+local hotkey_actions = {
+    ["hotkey-command-window-hide"] = Command_UI.hide_command_window,
+    ["hotkey-command-window-show"] = Command_UI.show_command_window,
+    ["hotkey-explain-selection"] = Inventory.explain_selection,
+    ["hotkey-get-runtool"] = Run.grab_runtool,
+    ["hotkey-mine-closest-building"] = Mine.mine_closest_building,
+    ["hotkey-mine-closest-resouce"] = Mine.mine_closest_resource,
+    ["hotkey-mine-selection"] = Mine.mine_selection,
+    ["hotkey-mine-tile-under-player"] = Mine.mine_tile_under_player,
+    ["hotkey-refuel-closest"] = Refuel.refuel_closest,
+    ["hotkey-refuel-everything"] = Refuel.refuel_everything,
+    ["hotkey-refuel-selection"] = Refuel.refuel_selection
+}
+Event.register(
+    Table.keys(hotkey_actions),
+    function(event)
+        hotkey_actions[event.input_name](game.players[event.player_index])
+    end
+)
