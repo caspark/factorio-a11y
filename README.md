@@ -97,6 +97,7 @@ Factorio exposes a UI (hit <kbd>Alt+Shift+Y</kbd> to show it) which is used for 
 | Grab item from inventory into cursor | `["grab", <item_name>]`                     |
 | Craft an item                        | `["craft_item", <item_name>, <item_count>]` |
 | Craft item currently held            | `["craft_selection", <item_count>]`         |
+| Dump prototype data to a JSON file   | `["dump_data"]`                             |
 
 ### Argument explanations
 

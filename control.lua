@@ -5,6 +5,7 @@ local Table = require("__stdlib__/stdlib/utils/table")
 -- our lua
 local Commands = require("__A11y__/logic/modules/commands")
 local Craft = require("__A11y__/logic/modules/craft")
+local Dump = require("__A11y__/logic/modules/dump")
 local Inventory = require("__A11y__/logic/modules/inventory")
 local Mine = require("__A11y__/logic/modules/mine")
 local Refuel = require("__A11y__/logic/modules/refuel")
@@ -99,6 +100,7 @@ a11y_api = {
     grab = Inventory.grab,
     count_item = Inventory.count_item,
     craft_item = Craft.craft_item,
-    craft_selection = Craft.craft_selection
+    craft_selection = Craft.craft_selection,
+    dump_data = Dump.dump_data
 }
 Commands.register_commands(a11y_api)
