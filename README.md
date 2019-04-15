@@ -1,127 +1,116 @@
-A11y for Factorio
-=================
+Factorio-A11y
+=============
 
-A11y (pronounced "ally") is an [accessibility](https://en.wikipedia.org/wiki/Computer_accessibility) mod for [Factorio](https://www.factorio.com/), which aims to make it possible to play the game with a little as possible input from mouse and keyboard while preserving the spirit of the game.
+Factorio-A11y (pronounced "factorio ally") is an [accessibility](https://en.wikipedia.org/wiki/Computer_accessibility) mod and associated voice control grammar for [Factorio](https://www.factorio.com/), which aims to make it possible to play the game with a little as possible input from mouse and keyboard while preserving the spirit of the game.
 
-You can use it as a "quality of life" mod but it really shines when it's paired with voice recognition software; for example:
+Paired with voice freely available voice recognition software, you can say:
 
-* Say <samp>refuel everything</samp> to put the best fuel you have into every furnace, car, burner inserter/mining drill in your reach
-* Say <samp>run there, grab stone furnace, click, refuel it</samp> to run where the cursor is, get a stone furnace from your inventory, build it, and load it up with the best fuel you have.
-* Say <samp>mine here repple five, craft ten wooden chest</samp> to mine the 5 closest trees and craft ten wooden chests
+* `refuel everything` to put the best fuel you have into every furnace, car, burner inserter/mining drill in your reach
+* `run there, grab stone furnace, click, refuel it` to run where the cursor is, get a stone furnace from your inventory, build it, and load it up with the best fuel you have.
+* `mine here repple five, craft ten wooden chest` to mine the 5 closest trees and craft ten wooden chests
 
 A11y aims to be compatible with other mods and to preserve existing gameplay mechanics; e.g. although it adds a way to move the character via the mouse cursor, rather than having the character instantly teleport from point A to point B, the character still needs to walk there along a valid path and brick/concrete still provide relevant speed boosts.
 
 Currently the mod is done enough to use for the early (pre combat) game, with new features being added regularly. **Star this repository if you're interested to help me prioritize my projects.**
 
-Awesome, how do I make it work!?
---------------------------------
+Prerequisites
+-------------
 
-First, a warning: **you'll get the most out of this mod right now if you're already familar with Dragonfly, Talon or Vocola** (see *Relevant Software* below). This is mainly because I haven't included a ready-to-go voice grammar in this mod.
+### Voice Control Software (required)
 
-With that out of the way:
+Factorio-A11y expects you to use voice control software; as of early 2019, the main options available are:
 
-1. The mod is not listed on the [Factorio mod portal](http://mods.factorio.com/) yet, so clone this repository
-2. Install the mod by creating a symlink or directory junction from `/mod` in this repo to `<factorio>/mods/A11y_0.1.0` (e.g. `mklink /J C:\Games\Factorio\mods\A11y_0.1.0 C:\src\factorio-a11y\mod` on Windows)
-3. Load up factorio to test that the A11y hotkeys documented below work to your satisfaction
-4. Write a voice grammar for Factorio to make voice commands hit your hotkeys
-5. Extend your grammar to support A11y's console commands. For now, you'll want to use Dragonfly's [DictListRef](https://dragonfly2.readthedocs.io/en/latest/elements.html#dictlistref-class) or equivalent with [a list of Factorio items](https://wiki.factorio.com/Data.raw#item) to make it easy to say item names.
+* [Dragonfly](https://github.com/dictation-toolbox/dragonfly) (Windows, some Linux support too) - supports Windows Speech Recognition, Dragon Naturally Speaking 13 or higher, or (experimentally) the open source Sphinx speech recognition system.
+* [Vocola](http://vocola.net/) (Windows) - requires Dragon Naturally Speaking 13 or higher.
+* [Talon](https://talonvoice.com/) (MacOS) - has a built in speech recognition engine, but can make use of Dragon Naturally Speaking 6.
 
-Eventually this mod will ship with an included voice grammar for Dragonfly and/or Talon, but for now the focus is on developing the capabilities of the mod itself.
+You only need to set up and install one of these.
 
-Visual Aids
------------
+### Mouse alternatives and replacements (optional)
 
-To make it easier to predict what your voice commands will do, A11y adds several visual aids:
+If you're interested in this mod for serious use, you might also want to check out:
 
-<img alt="Example screenshot of visual aids in Factorio" src="https://i.imgur.com/WWLJMIc.jpg" height="250"/>
+* Vertical mice, graphics tablet pens and trackballs might be less painful to your hands.
+* [JoyToKey](https://joytokey.net/en/) or [Gopher360](https://github.com/Tylemagne/Gopher360) can remap controllers/joysticks to send keypresses and/or mouse movements/clicks
+* [eViacam](http://eviacam.crea-si.com/index.php) (free, open source, Windows/Linux) can use a standard webcam to control the cursor by tracking your face so that the cursor moves when your head moves
+* [Precision-Gaze](https://precisiongazemouse.com/) (free, open source, Windows) is better, but requires you to buy eye or head tracking hardware (usually available for < 200 USD).
+* [Talon](https://talonvoice.com/) (free, MacOS) requires you to buy eye tracking hardware (usually available for < 200 USD), but is probably the most advanced option available (also supports making mouth noises to click).
 
-* The outer green circle is your reach for picking up items, mining and placing buildings.
-* The inner green circle is your reach for mining resources
-* The red circle denotes your closest resource (what <kbd>Alt+Shift+E</kbd> would mine)
-* The orange circle denotes your closest building (what <kbd>Alt+Shift+B</kbd> would mine)
-* The yellow circle denotes your closest refuelable entity (what <kbd>Alt+Shift+F</kbd> would refuel)
+If you can use a mouse fine and just want to use voice control for convenience, then you can ignore these. (Although it is very cool to control a game using only your eyes!)
 
-Hotkeys
--------
+Ok I'm in, how do I make it work!?
+----------------------------------
 
-### Utility
+1. Install the mod into Factorio: follow the setup instructions in `mod/README.md`
+2. Install a Factorio voice grammar (a set of voice commands for some software):
+  * If you use Dragonfly, follow the installation instructions in `dragonfly/README.md`
+  * If you use Vocola or Talon, you'll have to first port the Dragonfly grammar over. Send a PR when you're done!
+3. Start controlling Factorio by voice!
 
-* <kbd>Alt+Shift+W</kbd> - the "*Explain*" command; print out name of item in hand or entity hovered by cursor
-* <kbd>Alt+Shift+Y</kbd> - show the A11y text interface (see heading below for more info)
-* <kbd>CtrL+Alt+Shift+Y</kbd> - hide the A11y text interface
+Voice Grammar
+-------------
 
-### Movement
+A voice grammar is a collection of a set of voice commands and associated logic.
 
-* <kbd>Alt+Shift+R</kbd> then left click - run to clicked tile or entity
-
-### Mining
-
-Mining covers removing builds, getting resources, and removing tiles.
-
-* <kbd>Alt+Shift+E</kbd> - mine closest resource (ore, rock, tree, etc)
-* <kbd>Alt+Shift+B</kbd> - mine closest building
-* <kbd>Alt+Shift+M</kbd> - mine resource or entity hovered by cursor
-* <kbd>Alt+Shift+T</kbd> - mine tile directly under player (brick, concrete, etc)
-
-#### Refueling
-
-Refueling covers putting fuel into burner miners/inserters, stone furnaces, cars, etc. The best fuel available in your inventory is always used, unless there is already fuel in the entity, in which case more fuel of that type is added.
-
-* <kbd>Alt+Shift+F</kbd> - refuel entity hovered by cursor
-* <kbd>Ctrl+Alt+Shift+F</kbd> - refuel everything in reach
-* <kbd>Alt+Shift+U</kbd> - refuel closest entity
+Factorio-A11y assumes you already have a grammar for regular clicking, right clicking, hitting individual keyboard keys (to open/close inventory/map/etc), etc.
 
 You should also know [Tutorial:Keyboard shortcuts](https://wiki.factorio.com/Tutorial:Keyboard_shortcuts) and [TIL all the keyboard shortcuts](https://www.reddit.com/r/factorio/comments/5odbdf/til_all_the_keyboard_shortcuts/).
 
-A11y text interface
--------------------
+With that out of the way, Factorio-A11y provides the following commands:
 
-**Warning:** The API for these commands is unstable and subject to change.
+### Utility
 
-Factorio exposes a UI (hit <kbd>Alt+Shift+Y</kbd> to show it) which is used for entering commands which take arguments in JSON format: you should automate entering these via your voice grammar. For example:
+* `explain it` will print out the name of what you're holding or hovering over, which is very useful in combination with other commands.
+* `dump data` will force Factorio to spit out a bunch of data which the voice grammar can read (**TODO - not implemented yet**)
 
-```json
--- have your grammar press Alt+Shift+Y, wait 10ms, then type:
-["grab", "stone-furnace"]
--- or instead try
-["craft_item", "stone-furnace", 2]
--- then have your grammar press enter to submit the command
-```
+### Movement
 
-**NB:** You may be wondering "why bother with this when Factorio already has a console?". 1) So that this mod can be used on multiplayer servers where admins don't want to give console access and 2) Factorio console flashes all past output when it's activated to enter a command and that's really distracting. (Earlier versions of this mod used this approach to get started - it's still useful for prototyping!)
+* `run there` will run your character to where your cursor is on the screen.
+* `run <direction>` will run your character in the given direction indefinitely (useful for exploring)
+  * `direction` is any 1-2 of `north`, `south`, `east`, `west`
+* `stop` will stop your character from running in a direction indefinitely.
 
-### Available commands
+### Mining
 
-| What                                 | Command                                     |
-|--------------------------------------|---------------------------------------------|
-| Count item in inventory              | `["count_item", <item_name>]`               |
-| Grab item from inventory into cursor | `["grab", <item_name>]`                     |
-| Craft an item                        | `["craft_item", <item_name>, <item_count>]` |
-| Craft item currently held            | `["craft_selection", <item_count>]`         |
-| Dump prototype data to a JSON file   | `["dump_data"]`                             |
+* `mine ore` will mine the closest resource in reach which the player can mine (ore, tree or rock)
+* `mine house` will mine the closest building in reach
+* `mine it` will mine the item being hovered as long as it is in reach (building, resource, vehicle, etc)
+* `mine tile` will mine the tile being stood on (bricks, concrete, etc)
 
-### Argument explanations
+### Crafting
 
-| Argument    | Type    | Explanation                                                        |
-|-------------|---------|--------------------------------------------------------------------|
-| `item_name` | String  | [Item prototype name]. Use the *Explain* hotkey to discover these. |
-| `*_count`   | Integer | A numeric count for something (e.g. amount to craft.)              |
+* `craft <count> it` will craft the item being held or hovered over `<count>` times.
+  * `<count>` is the number of times you want to craft the recipe which creates the hovered item
+* `craft <count> <recipe>` will craft the item which `<recipe>` produces `<count>` times.
+  * `<count>` is the number of times you want to craft the recipe
+  * `<recipe>` is the name of an item you can craft
+  * For example: `craft 2 transport belt` will craft two regular conveyor belts.
 
-[Item prototype name]: https://wiki.factorio.com/Data.raw#item
+### Manipulating entities
 
-Recommended Grammar
--------------------
+* `copy` and `paste` will Shift + Left/Right Click respectively (and hence work as per [Manipulating Entities](https://wiki.factorio.com/Tutorial:Keyboard_shortcuts#Manipulating_entities)).
+* `red <rotate_count>` and `wrap <rotate_count>` (where `<rotate_count>` is an optional number from 1-4) will rotate/reverse-rotate an entity 1-4 times.
+  * For example, `red 2` will reverse the facing of a building.
 
-A11y assumes you already have voice commands for clicking, right clicking, hitting individual keys (to open/close inventory/map/etc), but here are things you may not have thought of:
+### Inventory management
 
-* Bind the following for easier inventory management:
-  * <samp>copy</samp> to Shift Left Click
-  * <samp>paste</samp> to Shift Right Click
-  * <samp>transfer</samp> to Ctrl Left Click
-  * <samp>split</samp> to Ctrl Right Click
-* Bind <samp>run ( north | west | south | east )</samp> to hold down <kbd>W/A/S/D</kbd> for you for easier exploring
-  * Also add a <samp>stop</samp> to release those 4 keys!
-* Make sure you have a quick command to hit <kbd>R</kbd> repeatedly, like <samp>red 3</samp> to rotate 3 times (although technically you only need 1-2 rotations, since <kbd>Shift+R</kbd> rotates once in reverse)
+* `transfer` and `split` will Ctrl + Left/Right Click respectively (and hence work as per [Manipulating Entities](https://wiki.factorio.com/Tutorial:Keyboard_shortcuts#Manipulating_items)).
+* `grab <item>` will transfer that item from your inventory to your cursor (so you can build it or put it into an assembly machine, etc)
+  * `<item>` is the name of an item you have in your inventory
+  * For example: `grab iron plate` will put a stack of iron plates into your hand.
+
+### Fueling
+
+* `refuel here` will refuel the closest refuelable entity
+* `refuel it` will refuel the entity being hovered over (building, vehicle, etc)
+* `refuel everything` will refuel
+
+Tips:
+
+* Refueling works with buildings (burner miners, burner inserters, stone furnaces, etc) and vehicles (cars, tanks, trains).
+* The highest energy value fuel is used first (coal before wood, for example).
+* The correct fuel for each entity is calculated dynamically, not hardcoded, so this should work with mods.
+
 
 Todo list
 ---------
@@ -149,28 +138,6 @@ Todo list
 * Mining resources and buildings should take some time - implement the mining hardness formula for this based on the FF post.
 
 
-Relevant Software
------------------
-
-### Mouse Alternatives
-
-Aside from relatively obvious options like vertical mice, graphics tablet pens and trackballs, the next easiest options to use are any controllers or joysticks you have lying around; remap them to send keypresses and/or mouse movements/clicks with [JoyToKey](https://joytokey.net/en/) or [Gopher360](https://github.com/Tylemagne/Gopher360).
-
-### Mouse replacements
-
-If you can't use a mouse, you can look into these options:
-
-* [eViacam](http://eviacam.crea-si.com/index.php) (free, open source, Windows/Linux) uses commodity webcams to control the cursor by tracking your face so that the cursor moves when your head moves
-* [Precision-Gaze](https://precisiongazemouse.com/) (free, open source, Windows) is better, but requires you to buy eye or head tracking hardware (usually available for < 200 USD).
-* [Talon](https://talonvoice.com/) (free, MacOS) requires you to buy eye tracking hardware (usually available for < 200 USD), but is probably the most advanced option available (also supports making mouth noises to click).
-
-### Voice Control Software
-
-Voice control software is useful for simulating clicks, keypresses, and typing; as of early 2019, the main options available are:
-
-* [Dragonfly](https://github.com/dictation-toolbox/dragonfly) (Windows, some Linux support too) - supports Windows Speech Recognition, Dragon Naturally Speaking 13 or higher, or (experimentally) the open source Sphinx speech recognition system.
-* [Vocola](http://vocola.net/) (Windows) - requires Dragon Naturally Speaking 13 or higher.
-* [Talon](https://talonvoice.com/) (MacOS) - has a built in speech recognition engine, but can make use of Dragon Naturally Speaking 6.
 
 Scratchpad
 ----------
