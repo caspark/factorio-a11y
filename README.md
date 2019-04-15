@@ -16,14 +16,15 @@ Currently the mod is done enough to use for the early (pre combat) game, with ne
 Awesome, how do I make it work!?
 --------------------------------
 
-First, a warning: **you'll get the most out of this mod right now if you're already familar with Dragon NaturallySpeaking, Vocola, Dragonfly, or Talon** (see *Relevant Software* below); This is mainly because I haven't included a ready-to-go voice grammar in this mod.
+First, a warning: **you'll get the most out of this mod right now if you're already familar with Dragonfly, Talon or Vocola** (see *Relevant Software* below). This is mainly because I haven't included a ready-to-go voice grammar in this mod.
 
 With that out of the way:
 
-1. The mod is not listed on the [Factorio mod portal](http://mods.factorio.com/) yet, so clone this repository into your `factorio/mods` directory
-2. Load up factorio to test that the A11y hotkeys documented below work to your satisfaction
-3. Write a voice grammar for Factorio to make voice commands hit your hotkeys
-4. Extend your grammar to support A11y's console commands. For now, you'll want to use Dragonfly's [DictListRef](https://dragonfly2.readthedocs.io/en/latest/elements.html#dictlistref-class) or equivalent with [a list of Factorio items](https://wiki.factorio.com/Data.raw#item) to make it easy to say item names.
+1. The mod is not listed on the [Factorio mod portal](http://mods.factorio.com/) yet, so clone this repository
+2. Install the mod by creating a symlink or directory junction from `/mod` in this repo to `<factorio>/mods/A11y_0.1.0` (e.g. `mklink /J C:\Games\Factorio\mods\A11y_0.1.0 C:\src\factorio-a11y\mod` on Windows)
+3. Load up factorio to test that the A11y hotkeys documented below work to your satisfaction
+4. Write a voice grammar for Factorio to make voice commands hit your hotkeys
+5. Extend your grammar to support A11y's console commands. For now, you'll want to use Dragonfly's [DictListRef](https://dragonfly2.readthedocs.io/en/latest/elements.html#dictlistref-class) or equivalent with [a list of Factorio items](https://wiki.factorio.com/Data.raw#item) to make it easy to say item names.
 
 Eventually this mod will ship with an included voice grammar for Dragonfly and/or Talon, but for now the focus is on developing the capabilities of the mod itself.
 
