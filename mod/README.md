@@ -8,6 +8,7 @@ It is intended to be used with voice recognition software; see the README at the
 Installing
 ----------
 
+0. Make sure you're running at least Factorio 0.17.something (the "experimental" version as of 2019-04-18)
 1. The mod is not listed on the [Factorio mod portal](http://mods.factorio.com/) yet, so clone this repository.
 2. Install the mod by creating a symlink or directory junction from `/mod` in this repo to `<factorio>/mods/A11y_0.1.0` (e.g. `mklink /J C:\Games\Factorio\mods\A11y_0.1.0 C:\src\factorio-a11y\mod` on Windows)
 3. Load up factorio to test that the visual aids, hotkeys and commands documented below work to your satisfaction

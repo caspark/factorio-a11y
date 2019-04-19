@@ -4,6 +4,15 @@ import dragonfly
 import re
 import json
 import datetime
+import os
+
+# =========== Settings ===========
+# TODO make this configurable
+FACTORIO_SCRIPT_OUTPUT_DIRECTORY = r"C:\Games\Factorio_0.17\script-output"
+
+# =========== Constants ===========
+DUMP_FILE_NAME = os.path.join(
+    FACTORIO_SCRIPT_OUTPUT_DIRECTORY, r"A11y_data_dump.json")
 
 # =========== General utility functions ===========
 
@@ -22,6 +31,10 @@ def combine_maps(*maps):
                 result[key] = value
     return result
 
+
+def p(*args):
+    print("Factorio grammar:", *args)
+
 # =========== Dragonfly utility functions ===========
 
 
@@ -39,159 +52,8 @@ def make_action_release_keys(keys):
 # =========== Factorio data ===========
 
 
-_known_items = {
-    "accumulator",
-    "advanced-circuit",
-    "arithmetic-combinator",
-    "artillery-turret",
-    "assembling-machine-1",
-    "assembling-machine-2",
-    "assembling-machine-3",
-    "automation-science-pack",
-    "battery-equipment",
-    "battery-mk2-equipment",
-    "battery",
-    "beacon",
-    "belt-immunity-equipment",
-    "big-electric-pole",
-    "boiler",
-    "burner-inserter",
-    "burner-mining-drill",
-    "centrifuge",
-    "chemical-plant",
-    "chemical-science-pack",
-    "coal",
-    "concrete",
-    "constant-combinator",
-    "construction-robot",
-    "copper-cable",
-    "copper-ore",
-    "copper-plate",
-    "crude-oil-barrel",
-    "decider-combinator",
-    "discharge-defense-equipment",
-    "electric-engine-unit",
-    "electric-furnace",
-    "electric-mining-drill",
-    "electronic-circuit",
-    "empty-barrel",
-    "energy-shield-equipment",
-    "energy-shield-mk2-equipment",
-    "engine-unit",
-    "escape-pod-assembler",
-    "escape-pod-lab",
-    "escape-pod-power",
-    "exoskeleton-equipment",
-    "explosives",
-    "express-splitter",
-    "express-transport-belt",
-    "express-underground-belt",
-    "fast-inserter",
-    "fast-splitter",
-    "fast-transport-belt",
-    "fast-underground-belt",
-    "filter-inserter",
-    "flamethrower-turret",
-    "flying-robot-frame",
-    "fusion-reactor-equipment",
-    "gate",
-    "green-wire",
-    "gun-turret",
-    "hazard-concrete",
-    "heat-exchanger",
-    "heat-interface",
-    "heat-pipe",
-    "heavy-oil-barrel",
-    "inserter",
-    "iron-chest",
-    "iron-gear-wheel",
-    "iron-ore",
-    "iron-plate",
-    "iron-stick",
-    "lab",
-    "land-mine",
-    "landfill",
-    "laser-turret",
-    "light-oil-barrel",
-    "logistic-chest-active-provider",
-    "logistic-chest-buffer",
-    "logistic-chest-passive-provider",
-    "logistic-chest-requester",
-    "logistic-chest-storage",
-    "logistic-robot",
-    "logistic-science-pack",
-    "long-handed-inserter",
-    "low-density-structure",
-    "lubricant-barrel",
-    "medium-electric-pole",
-    "military-science-pack",
-    "night-vision-equipment",
-    "nuclear-fuel",
-    "nuclear-reactor",
-    "offshore-pump",
-    "oil-refinery",
-    "personal-laser-defense-equipment",
-    "personal-roboport-equipment",
-    "personal-roboport-mk2-equipment",
-    "petroleum-gas-barrel",
-    "pipe-to-ground",
-    "pipe",
-    "plastic-bar",
-    "power-switch",
-    "processing-unit",
-    "production-science-pack",
-    "programmable-speaker",
-    "pump",
-    "pumpjack",
-    "radar",
-    "rail-chain-signal",
-    "rail-signal",
-    "red-wire",
-    "refined-concrete",
-    "refined-hazard-concrete",
-    "roboport",
-    "rocket-control-unit",
-    "rocket-fuel",
-    "rocket-part",
-    "rocket-silo",
-    "satellite",
-    "small-electric-pole",
-    "small-lamp",
-    "solar-panel-equipment",
-    "solar-panel",
-    "solid-fuel",
-    "space-science-pack",
-    "splitter",
-    "stack-filter-inserter",
-    "stack-inserter",
-    "steam-engine",
-    "steam-turbine",
-    "steel-chest",
-    "steel-furnace",
-    "steel-plate",
-    "stone-brick",
-    "stone-furnace",
-    "stone-wall",
-    "stone",
-    "storage-tank",
-    "substation",
-    "sulfur",
-    "sulfuric-acid-barrel",
-    "train-stop",
-    "transport-belt",
-    "underground-belt",
-    "uranium-235",
-    "uranium-238",
-    "uranium-fuel-cell",
-    "uranium-ore",
-    "used-up-uranium-fuel-cell",
-    "utility-science-pack",
-    "water-barrel",
-    "wood",
-    "wooden-chest",
-}
-
-factorio_item_names = {x.replace('-', ' '): x for x in _known_items}
+factorio_items = dragonfly.DictList("factorio_items")
+factorio_recipes = dragonfly.DictList("factorio_recipes")
 
 
 # =========== Actual Factorio grammar ===========
@@ -269,14 +131,42 @@ def factorio_grab_item(item_name):
     make_factorio_action_a11y_command(["grab", item_name]).execute()
 
 
-def factorio_craft_item(item_name, item_count):
+def factorio_craft_item(recipe_name, item_count):
     make_factorio_action_a11y_command(
-        ["craft_item", item_name, item_count]).execute()
+        ["craft_item", recipe_name, item_count]).execute()
 
 
 def factorio_craft_selection(item_count):
     make_factorio_action_a11y_command(
         ["craft_selection", item_count]).execute()
+
+
+def data_reload():
+    make_factorio_action_a11y_command(["dump_data"]).execute()
+    dragonfly.Pause("50").execute()
+    with open(DUMP_FILE_NAME, "r") as f:
+        data = json.load(f)
+
+    def pronounceable(thing):
+        return thing[u'n'].replace('-', ' ')
+
+    loaded_items = {pronounceable(x): x[u'n'] for x in data[u'items']}
+    loaded_recipes = {pronounceable(x): x[u'n'] for x in data[u'recipes']}
+
+    factorio_items.set(loaded_items)
+    factorio_recipes.set(loaded_recipes)
+
+    p('successfully loaded {item_count} items and {recipe_count} recipes from {path}'.format(
+        item_count=len(loaded_items), recipe_count=len(loaded_recipes), path=DUMP_FILE_NAME
+    ))
+
+
+def data_list_items():
+    p("known items are:", ', '.join(sorted(factorio_items.keys())))
+
+
+def data_list_recipes():
+    p("known recipes are:", ', '.join(sorted(factorio_recipes.keys())))
 
 
 factorio_console_commands = {
@@ -306,6 +196,11 @@ class FactorioRule(dragonfly.MappingRule):
         {k: make_factorio_action_a11y_command(
             v) for k, v in factorio_a11y_commands.items()},
         {
+            # commands to manage and debug reading data (e.g. recipe & item names) from Factorio
+            "data reload": dragonfly.Function(data_reload),
+            "data list items": dragonfly.Function(data_list_items),
+            "data list recipes": dragonfly.Function(data_list_recipes),
+
             "walk <dir_8>": dragonfly.Function(factorio_start_walking),
             "zoom <n>": dragonfly.Function(factorio_set_zoom),
             "zoom out": dragonfly.Function(lambda: factorio_set_zoom(0)),
@@ -321,11 +216,9 @@ class FactorioRule(dragonfly.MappingRule):
             # a11y commands that take inputs
             "count <item_name>": dragonfly.Function(factorio_count_item),
             "grab <item_name>": dragonfly.Function(factorio_grab_item),
-            "craft [<item_count>] <item_name>": dragonfly.Function(factorio_craft_item),
+            "craft [<item_count>] <recipe_name>": dragonfly.Function(factorio_craft_item),
             "craft [<item_count>] it": dragonfly.Function(factorio_craft_selection),
 
-            # a11y commands which do not take inputs and are not bound to hot keys
-            "dump data": make_factorio_action_a11y_command(["dump_data"]),
 
             # ally commands bound to hotkeys
             "what is this": dragonfly.Key("as-w"),
@@ -356,7 +249,8 @@ class FactorioRule(dragonfly.MappingRule):
         dragonfly.Integer(name="n", default=1, min=1, max=20),
         dragonfly.Integer(name="item_count", default=1, min=1, max=101),
         dragonfly.Integer(name="rotate_count", default=1, min=1, max=4),
-        dragonfly.Choice(name="item_name", choices=factorio_item_names)
+        dragonfly.DictListRef("item_name", factorio_items),
+        dragonfly.DictListRef("recipe_name", factorio_recipes),
     ]
 
 
@@ -365,12 +259,12 @@ grammar = dragonfly.Grammar('factorio', context=dragonfly.AppContext(
 grammar.add_rule(FactorioRule())
 grammar.load()
 
-print('Factorio grammar: loaded at ' + str(datetime.datetime.now()))
+p('loaded at ' + str(datetime.datetime.now()))
 
 
 def unload():
     global grammar
     if grammar:
         grammar.unload()
-        print('Factorio grammar: unloaded')
+        p('unloaded')
     grammar = None

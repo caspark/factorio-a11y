@@ -46,6 +46,7 @@ Ok I'm in, how do I make it work!?
   * If you use Dragonfly, follow the installation instructions in `dragonfly/README.md`
   * If you use Vocola or Talon, you'll have to first port the Dragonfly grammar over. Send a PR when you're done!
 3. Start controlling Factorio by voice!
+  * Start by saying `data reload` to get the voice grammar to know about all the Factorio items, recipes, etc loaded into the game.
 
 Voice Grammar
 -------------
@@ -58,10 +59,19 @@ You should also know [Tutorial:Keyboard shortcuts](https://wiki.factorio.com/Tut
 
 With that out of the way, Factorio-A11y provides the following commands:
 
+### Data syncing
+
+The voice grammar loads data from Factorio, but you need to ask it to do so:
+
+* `data reload` will force Factorio to dump data which the voice grammar will then read
+* `data list items` will list out names of known items (things you can `grab`)
+* `data list recipes` will list out names of known recipes (things you can `craft`)
+
+Basically you should say `data reload` anytime after unloading & reloading your voice grammar, after updating Factorio, or after changing your Factorio mods.
+
 ### Utility
 
 * `explain it` will print out the name of what you're holding or hovering over, which is very useful in combination with other commands.
-* `dump data` will force Factorio to spit out a bunch of data which the voice grammar can read (**TODO - not implemented yet**)
 
 ### Movement
 
@@ -121,6 +131,8 @@ Todo list
 
 ### QoL and papercuts
 
+* Make voice grammar detect Factorio script output location? Or at least read it from config file.
+* Voice grammar should save and load last data loaded from Factorio and restore it upon grammar reload
 * When you can't craft something because of missing resources, print out how many of what is missing
 * Restore the thing in hand after a "run there"
 * When mining nearest resource, prefer mining things that collide with the player (e.g. trees & rocks) for convenience in clearing a path.
