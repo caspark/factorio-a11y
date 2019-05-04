@@ -8,8 +8,9 @@ ignore = {
 -- the set of standard globals to expect
 std = "lua52"
 
--- globals which we define (these are also allowed to be read)
+-- settable globals (these are also allowed to be read)
 globals = {
+    -- globals which a11y defines
     "a11y_api",
     "Logger",
     "q",
@@ -20,7 +21,8 @@ read_globals = {
     -- factorio documented built-ins for data loading
     data = {
         fields = {
-            "extend"
+            "extend",
+            raw = {read_only = false, other_fields = true}
         }
     },
     -- factorio documented built-ins for runtime

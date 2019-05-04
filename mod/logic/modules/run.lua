@@ -2,6 +2,7 @@ local Event = require("__stdlib__/stdlib/event/event")
 local Game = require("__stdlib__/stdlib/game")
 local Is = require("__stdlib__/stdlib/utils/is")
 local Position = require("__stdlib__/stdlib/area/position")
+local Table = require("__stdlib__/stdlib/utils/table")
 
 local M = {}
 
@@ -24,16 +25,50 @@ end
 function M.run_to_target(player, target)
     M.stop_moving_player_along_path(player)
 
-    -- we can't path from the player's exact position, presumably because the player is an obstacle itself
-    -- so instead we find a position near the player which we can path from
-    local start_pos =
-        player.surface.find_non_colliding_position(
-        "character", -- prototype name
-        player.position, -- center
-        .7, -- radius
-        0.01, -- precision for search (step size)
-        false -- force_to_tile_center
-    )
+    -- The path's collision mask determines what things <the thing that travels along the path>
+    -- would collide with, and hence the things that need to be pathed around.
+    local path_collion_mask = Table.keys(player.character.prototype.collision_mask)
+    -- We need "not-colliding-with-itself" to be in effect so the path doesn't "collide with"
+    -- the player (https://wiki.factorio.com/Types/CollisionMask#.22not-colliding-with-itself.22),
+    -- but:
+    -- a) that only happens if both the player's character and the path have the layer
+    --    "not-colliding-with-itself" set on their collision mask
+    -- b) "not-colliding-with-itself" is kind of a fake layer that gets moved to a property
+    --    on the entity later ("collision_mask_collides_with_self" on LuaPrototype)
+    -- So, first we check that the player's character is set up correctly to have the
+    -- "not-colliding-with-itself" flag set (a11y should have configured this itself in
+    -- its data-updates.lua).
+    local start_pos
+    if not player.character.prototype.collision_mask_collides_with_self then
+        -- Since it's set on the player, we need to manually insert "not-colliding-with-itself"
+        -- into the collision layer of the path, and we can start the path immediately at the
+        -- player's character's position.
+        Table.insert(path_collion_mask, "not-colliding-with-itself")
+        start_pos = player.character.position
+    else
+        -- If it is not set on the player character (happens when e.g. a mod has swapped out the
+        -- character of the player), then the path will collide with the player, which causes no
+        -- path to be found (because the start of the path itself is blocked by the player).
+        -- So in this case, fall back to the alternative approach of finding a place
+        -- for the path to start which is at least near the player. This will manifest in the
+        -- character sometimes running a little way in the wrong direction when pathing to a
+        -- location (because the start position for the path is going to be approximately
+        -- <player bounding box's radius> away from the player and not necessarily in the
+        -- direction of the destination).
+        start_pos =
+            player.surface.find_non_colliding_position(
+            "character", -- prototype name
+            player.position, -- center
+            .7, -- radius
+            0.01, -- precision for search (step size)
+            false -- force_to_tile_center
+        )
+        Logger.log(
+            "Player's character collides with self so found alternative start pos of " ..
+                start_pos.x .. "," .. start_pos.y
+        )
+    end
+
     if not start_pos then
         player.print("No valid starting position for path!")
         return
@@ -76,7 +111,13 @@ function M.run_to_target(player, target)
     local path_id =
         player.surface.request_path {
         bounding_box = player.character.prototype.collision_box,
-        collision_mask = {"player-layer"},
+        collision_mask = path_collion_mask,
+        -- {
+        --     "player-layer",
+        --     "train-layer",
+        --     "consider-tile-transitions",
+        --     "not-colliding-with-itself"
+        -- },
         start = start_pos,
         goal = target_position,
         force = player.force,
