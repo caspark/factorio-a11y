@@ -28,7 +28,7 @@ function M.run_to_target(player, target)
     -- so instead we find a position near the player which we can path from
     local start_pos =
         player.surface.find_non_colliding_position(
-        "player", -- prototype name
+        "character", -- prototype name
         player.position, -- center
         .7, -- radius
         0.01, -- precision for search (step size)
