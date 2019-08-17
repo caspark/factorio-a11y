@@ -43,7 +43,7 @@ def text_to_literal_elements(text_list):
 
 
 def make_action_hold_keys(keys):
-    return dragonfly.dragonfly.Key(",".join(["{}:down".format(x) for x in keys]))
+    return dragonfly.Key(",".join(["{}:down".format(x) for x in keys]))
 
 
 def make_action_release_keys(keys):
