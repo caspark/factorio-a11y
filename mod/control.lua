@@ -13,7 +13,7 @@ local Run = require("__A11y__/logic/modules/run")
 
 -- ============== Global helpers ==============
 
-Logger = require("__stdlib__/stdlib/misc/logger").new("A11y", "A11y_Debug", true, {log_ticks = true})
+Logger = require("__stdlib__/stdlib/misc/logger").new("A11y_Debug", true, {log_ticks = true})
 
 -- global helper function to quote a string in single quotes
 function q(s)
