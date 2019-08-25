@@ -147,54 +147,29 @@ function M.try_move_player_along_path(player)
     local progress = Game.get_or_set_data("run", player.index, "path_progress", false,
                                           {waypoint = 0})
 
-    -- Move the player along the path in steps. This is tricky because we need to respect the player's
-    -- speed each step of the way, which is influenced by their position (due to concrete). To do this,
-    -- we introduce the concept of "travel power" (the fraction of their unused speed this tick) and
-    -- "travel dist" (the actual distance the player can travel still, based on applying their travel
-    -- power to their current speed).
-    -- Also, to avoid overshooting waypoints, each step is sized as the smaller of the player's travel
-    -- dist and the current player pos<->next waypoint pos.
-    local travel_power_left = 1.0 -- fraction
     local next_waypoint = path[progress.waypoint]
+    local old_player_pos = player.position
+    local next_waypoint_dist = Position.distance(old_player_pos, next_waypoint.position)
 
-    while (travel_power_left > 0 and next_waypoint ~= nil) do
-        local old_player_pos = player.position
-        local next_waypoint_dist = Position.distance(old_player_pos, next_waypoint.position)
-        local travel_dist_left = travel_power_left * player.character_running_speed
-
-        local new_player_pos
-        if travel_dist_left >= next_waypoint_dist then
-            -- this step is moving the player straight to the next waypoint
-            new_player_pos = next_waypoint.position
-            -- now make progress towards the next waypoint
-            progress.waypoint = progress.waypoint + 1
-            next_waypoint = path[progress.waypoint]
-        else
-            -- in this step we just move the player as far we can towards the next waypoint
-            local distance_remaining = next_waypoint_dist - travel_dist_left
-            new_player_pos = Position.offset_along_line(old_player_pos, next_waypoint.position,
-                                                        distance_remaining)
+    -- Find the next waypoint to move the character towards which is at least <running speed>
+    -- away from the player (to avoid overshooting the target waypoint).
+    -- Theoretically it's possible the player may end up stuck ping ponging between 2
+    -- waypoints here still, but let's see if that's a problem in practice first.
+    while next_waypoint ~= nil and next_waypoint_dist <= player.character_running_speed do
+        progress.waypoint = progress.waypoint + 1
+        next_waypoint = path[progress.waypoint]
+        if next_waypoint == nil then
+            Logger.log("Done moving player along path; ended up at " .. player.position.x .. ","
+                           .. player.position.y)
+            M.stop_moving_player_along_path(player)
+            return
         end
-
-        -- Actually move the player; unfortunately we there's no API to "run" them, so teleport instead.
-        -- This also means there's no walking animation or noise unfortunately, but oh well.
-        player.teleport(new_player_pos)
-
-        local travel_dist_used = Position.distance(old_player_pos, new_player_pos)
-        if travel_dist_used >= travel_dist_left then
-            -- Sometimes (due to floating point imprecision?) we travel more distance than we should
-            -- be able to, so just wipe out all our travel power in this case.
-            travel_power_left = 0
-        elseif travel_dist_used > 0 then
-            travel_power_left = travel_power_left - (travel_dist_left / travel_dist_used)
-        end
+        next_waypoint_dist = Position.distance(old_player_pos, next_waypoint.position)
     end
 
-    if not next_waypoint then
-        Logger.log("Done moving player along path; ended up at " .. player.position.x .. ","
-                       .. player.position.y)
-        M.stop_moving_player_along_path(player)
-    end
+    -- Make the player walk for one tick in the right direction
+    local dir_to_walk = Position.complex_direction_to(old_player_pos, next_waypoint.position, true)
+    player.character.walking_state = {walking = true, direction = dir_to_walk}
 end
 
 function M.render_ui(player)
@@ -231,8 +206,8 @@ function M.render_ui(player)
                 ui_ids[#ui_ids + 1] = rendering.draw_circle(
                                           {
                         color = defines.color.lightblue,
-                        radius = 0.2,
-                        width = 2,
+                        radius = 0.1,
+                        width = 1,
                         filled = false,
                         target = waypoint.position,
                         target_offset = {0, 0},
