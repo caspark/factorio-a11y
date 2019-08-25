@@ -111,7 +111,7 @@ function M.register_event_handlers()
 
             local player = game.players[event.player_index]
             M.hide_command_window(player)
-            parsed_command = parse_json_command(player, json_command)
+            local parsed_command = parse_json_command(player, json_command)
             if parsed_command ~= nil then
                 dispatch_command(player, parsed_command)
             end
