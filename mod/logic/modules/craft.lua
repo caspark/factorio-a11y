@@ -1,4 +1,4 @@
-local table = require('__stdlib__/stdlib/utils/table')
+local table = require("__stdlib__/stdlib/utils/table")
 
 local Selector = require("__A11y__/logic/utils/selector")
 
@@ -14,9 +14,11 @@ local function get_missing_ingredients(player, recipe_name, desired_count)
             return nil
         end
     end)
-    missing = table.filter(missing, function(v) return v ~= nil end)
+    missing = table.filter(missing, function(v)
+        return v ~= nil
+    end)
     if #missing > 0 then
-        return (', '):join(missing)
+        return (", "):join(missing)
     else
         return nil
     end
@@ -27,21 +29,21 @@ local M = {}
 -- begin crafting a given item for a given count
 function M.craft_item(player, item_or_recipe_name, item_count)
     local recipe = game.recipe_prototypes[item_or_recipe_name]
+
     if recipe == nil then
-        player.print("Recipe " .. q(item_or_recipe_name) ..
-                         " does not exist in the game")
+        player.print("Recipe " .. q(item_or_recipe_name) .. " does not exist in the game")
         return
     end
 
     if not player.force.recipes[recipe.name].enabled then
-        player.print("Recipe " .. q(recipe.name) ..
-                         " exists but isn't available for crafting (might require research?)")
+        player.print("Recipe " .. q(recipe.name)
+                         .. " exists but isn't available for crafting (might require research?)")
         return
     end
 
     if not player.character.prototype.crafting_categories[recipe.category] then
-        player.print("Recipe " .. q(recipe.name) ..
-                         " cannot be crafted by hand by your player character")
+        player.print("Recipe " .. q(recipe.name)
+                         .. " cannot be crafted by hand by your player character")
         return
     end
 
@@ -49,25 +51,19 @@ function M.craft_item(player, item_or_recipe_name, item_count)
     if count_available == 0 then
         local missing = get_missing_ingredients(player, recipe.name, item_count)
         if missing == nil then
-            player.print("Can't craft " .. q(recipe.name) ..
-                             " by hand - a11y is not sure why :(")
+            player.print("Can't craft " .. q(recipe.name) .. " by hand - a11y is not sure why :(")
         else
-            player.print("Missing ingredients for crafting any " ..
-                             q(recipe.name) .. ": need " .. missing)
+            player.print("Missing ingredients for crafting any " .. q(recipe.name) .. ": need "
+                             .. missing)
         end
-
     elseif count_available < item_count then
         -- we can't craft them all, but craft as many as we can
-        local count_crafting = player.begin_crafting{
-            recipe = recipe.name,
-            count = count_available
-        }
+        local count_crafting = player.begin_crafting{recipe = recipe.name, count = count_available}
         local count_leftover = item_count - count_crafting
-        local missing = get_missing_ingredients(player, recipe.name,
-                                                count_leftover)
-        player.print("Crafting " .. count_crafting .. " (not " .. item_count ..
-                         ") of " .. q(recipe.name) .. "; to craft " ..
-                         count_leftover .. " more, need " .. missing)
+        local missing = get_missing_ingredients(player, recipe.name, count_leftover)
+        player.print("Crafting " .. count_crafting .. " (not " .. item_count .. ") of "
+                         .. q(recipe.name) .. "; to craft " .. count_leftover .. " more, need "
+                         .. missing)
     else
         player.begin_crafting{recipe = recipe.name, count = item_count}
     end

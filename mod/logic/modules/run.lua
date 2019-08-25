@@ -55,18 +55,14 @@ function M.run_to_target(player, target)
         -- location (because the start position for the path is going to be approximately
         -- <player bounding box's radius> away from the player and not necessarily in the
         -- direction of the destination).
-        start_pos =
-            player.surface.find_non_colliding_position(
-            "character", -- prototype name
-            player.position, -- center
-            .7, -- radius
-            0.01, -- precision for search (step size)
-            false -- force_to_tile_center
+        start_pos = player.surface.find_non_colliding_position("character", -- prototype name
+        player.position, -- center
+        .7, -- radius
+        0.01, -- precision for search (step size)
+        false -- force_to_tile_center
         )
-        Logger.log(
-            "Player's character collides with self so found alternative start pos of " ..
-                start_pos.x .. "," .. start_pos.y
-        )
+        Logger.log("Player's character collides with self so found alternative start pos of "
+                       .. start_pos.x .. "," .. start_pos.y)
     end
 
     if not start_pos then
@@ -108,8 +104,7 @@ function M.run_to_target(player, target)
         return
     end
 
-    local path_id =
-        player.surface.request_path {
+    local path_id = player.surface.request_path{
         bounding_box = player.character.prototype.collision_box,
         collision_mask = path_collion_mask,
         -- {
@@ -126,17 +121,15 @@ function M.run_to_target(player, target)
             allow_destroy_friendly_entities = false,
             cache = false,
             prefer_straight_paths = false, -- we don't want paths with right angles here
-            low_priority = false
+            low_priority = false,
         },
         can_open_gates = true,
         -- resolution of >= 3 seems to be necessary to allow the player to run between
         -- side-by-side assembly machines.
-        path_resolution_modifier = 3
+        path_resolution_modifier = 3,
     }
-    Logger.log(
-        "Issued pathfinding request to " ..
-            target_position.x .. "," .. target_position.y .. " (request-id: " .. path_id .. ")"
-    )
+    Logger.log("Issued pathfinding request to " .. target_position.x .. "," .. target_position.y
+                   .. " (request-id: " .. path_id .. ")")
     Game.get_or_set_data("run", player.index, "last_path_id", true, path_id)
 end
 
@@ -151,7 +144,8 @@ function M.try_move_player_along_path(player)
         player.print("Found a path but it doesn't have a 0th waypoint!")
         return
     end
-    local progress = Game.get_or_set_data("run", player.index, "path_progress", false, {waypoint = 0})
+    local progress = Game.get_or_set_data("run", player.index, "path_progress", false,
+                                          {waypoint = 0})
 
     -- Move the player along the path in steps. This is tricky because we need to respect the player's
     -- speed each step of the way, which is influenced by their position (due to concrete). To do this,
@@ -178,7 +172,8 @@ function M.try_move_player_along_path(player)
         else
             -- in this step we just move the player as far we can towards the next waypoint
             local distance_remaining = next_waypoint_dist - travel_dist_left
-            new_player_pos = Position.offset_along_line(old_player_pos, next_waypoint.position, distance_remaining)
+            new_player_pos = Position.offset_along_line(old_player_pos, next_waypoint.position,
+                                                        distance_remaining)
         end
 
         -- Actually move the player; unfortunately we there's no API to "run" them, so teleport instead.
@@ -196,16 +191,19 @@ function M.try_move_player_along_path(player)
     end
 
     if not next_waypoint then
-        Logger.log("Done moving player along path; ended up at " .. player.position.x .. "," .. player.position.y)
+        Logger.log("Done moving player along path; ended up at " .. player.position.x .. ","
+                       .. player.position.y)
         M.stop_moving_player_along_path(player)
     end
 end
 
 function M.render_ui(player)
-    local ui_last_player_pos =
-        Game.get_or_set_data("run", player.index, "ui_last_player_pos", false, {x = nil, y = nil})
-    local ui_force_rerender = Game.get_or_set_data("run", player.index, "ui_force_rerender", false, false)
-    if player.position.x == ui_last_player_pos.x and player.position.y == ui_last_player_pos.y and not ui_force_rerender then
+    local ui_last_player_pos = Game.get_or_set_data("run", player.index, "ui_last_player_pos",
+                                                    false, {x = nil, y = nil})
+    local ui_force_rerender = Game.get_or_set_data("run", player.index, "ui_force_rerender", false,
+                                                   false)
+    if player.position.x == ui_last_player_pos.x and player.position.y == ui_last_player_pos.y
+        and not ui_force_rerender then
         -- bail out to avoid rerendering when position has not changed
         return
     else
@@ -226,12 +224,12 @@ function M.render_ui(player)
     -- render last provided path
     local waypoints = Game.get_or_set_data("run", player.index, "path_to_follow", false, nil)
     if waypoints then
-        local progress = Game.get_or_set_data("run", player.index, "path_progress", false, {waypoint = 0, dist = nil})
+        local progress = Game.get_or_set_data("run", player.index, "path_progress", false,
+                                              {waypoint = 0, dist = nil})
         for i, waypoint in ipairs(waypoints) do
             if i >= progress.waypoint then
-                ui_ids[#ui_ids + 1] =
-                    rendering.draw_circle(
-                    {
+                ui_ids[#ui_ids + 1] = rendering.draw_circle(
+                                          {
                         color = defines.color.lightblue,
                         radius = 0.2,
                         width = 2,
@@ -241,82 +239,70 @@ function M.render_ui(player)
                         surface = player.surface,
                         players = {player.index},
                         visible = true,
-                        draw_on_ground = true
-                    }
-                )
+                        draw_on_ground = true,
+                    })
             end
         end
     end
 end
 
 function M.register_event_handlers()
-    Event.register(
-        defines.events.on_script_path_request_finished,
-        function(event)
-            local path_id = event.id
-            for _, player in pairs(game.players) do
-                if path_id == Game.get_or_set_data("run", player.index, "last_path_id", true, path_id) then
-                    if event.try_again_later then
-                        player.print("Pathfinder was too busy - got try again later result for pathfinding")
+    Event.register(defines.events.on_script_path_request_finished, function(event)
+        local path_id = event.id
+        for _, player in pairs(game.players) do
+            if path_id == Game.get_or_set_data("run", player.index, "last_path_id", true, path_id) then
+                if event.try_again_later then
+                    player.print(
+                        "Pathfinder was too busy - got try again later result for pathfinding")
+                else
+                    -- player.print("Got paths of " .. serpent.block(event))
+                    if event.path then
+                        -- update the path to have a 0th waypoint which is the player's current position
+                        -- (necessary to avoid a jerk at the start of pathing since the path needs to
+                        -- start outside the player's collision box)
+                        event.path[0] = {position = player.position, needs_destroy_to_reach = false}
                     else
-                        -- player.print("Got paths of " .. serpent.block(event))
-                        if event.path then
-                            -- update the path to have a 0th waypoint which is the player's current position
-                            -- (necessary to avoid a jerk at the start of pathing since the path needs to
-                            -- start outside the player's collision box)
-                            event.path[0] = {position = player.position, needs_destroy_to_reach = false}
-                        else
-                            player.print("Failed to find path!")
-                        end
-
-                        Game.get_or_set_data("run", player.index, "path_to_follow", true, event.path)
+                        player.print("Failed to find path!")
                     end
+
+                    Game.get_or_set_data("run", player.index, "path_to_follow", true, event.path)
                 end
             end
         end
-    )
+    end)
 
-    Event.register(
-        {
-            defines.events.on_player_selected_area,
-            defines.events.on_player_alt_selected_area
-        },
-        function(e)
-            if e.item ~= "runtool" then
-                return
-            end
-            local player = game.players[e.player_index]
-            local area = e.area
-
-            local selected_entities = player.surface.find_entities(area)
-
-            if #selected_entities > 0 then
-                local target = selected_entities[1]
-                player.print("Running to selected " .. q(target.name))
-                M.run_to_target(player, target)
-            elseif player.selected ~= nil then
-                local target = player.selected
-                player.print("Running to highlighted " .. q(target.name))
-                M.run_to_target(player, target)
-            else
-                local target = area.left_top
-                player.print("Running to position " .. target.x .. "," .. target.y)
-                M.run_to_target(player, target)
-            end
+    Event.register({
+        defines.events.on_player_selected_area, defines.events.on_player_alt_selected_area,
+    }, function(e)
+        if e.item ~= "runtool" then
+            return
         end
-    )
+        local player = game.players[e.player_index]
+        local area = e.area
 
-    Event.register(
-        {
-            "a11y-hook-player-walked-up",
-            "a11y-hook-player-walked-right",
-            "a11y-hook-player-walked-down",
-            "a11y-hook-player-walked-left"
-        },
-        function(event)
-            M.stop_moving_player_along_path(game.players[event.player_index])
+        local selected_entities = player.surface.find_entities(area)
+
+        if #selected_entities > 0 then
+            local target = selected_entities[1]
+            player.print("Running to selected " .. q(target.name))
+            M.run_to_target(player, target)
+        elseif player.selected ~= nil then
+            local target = player.selected
+            player.print("Running to highlighted " .. q(target.name))
+            M.run_to_target(player, target)
+        else
+            local target = area.left_top
+            player.print("Running to position " .. target.x .. "," .. target.y)
+            M.run_to_target(player, target)
         end
-    )
+    end)
+
+    Event.register({
+        "a11y-hook-player-walked-up", "a11y-hook-player-walked-right",
+        "a11y-hook-player-walked-down", "a11y-hook-player-walked-left",
+    }, function(event)
+        M.stop_moving_player_along_path(game.players[event.player_index])
+    end)
 end
 
 return M

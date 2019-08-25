@@ -4,7 +4,7 @@ M.source = {
     CURSOR_HELD = "cursor_held",
     CURSOR_GHOST = "cursor_ghost",
     HOVERED_GHOST = "hovered_ghost",
-    HOVERED = "hovered"
+    HOVERED = "hovered",
 }
 
 -- Do the best you can to figure out what item the player is indicating.

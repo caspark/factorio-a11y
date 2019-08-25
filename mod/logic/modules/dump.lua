@@ -6,13 +6,7 @@ local output_filename = "A11y_data_dump.json"
 local function load_recipes()
     local recipes = {}
     for name, proto in pairs(game.recipe_prototypes) do
-        table.insert(
-            recipes,
-            {
-                n = name,
-                ln = proto.localised_name
-            }
-        )
+        table.insert(recipes, {n = name, ln = proto.localised_name})
     end
     return recipes
 end
@@ -20,13 +14,7 @@ end
 local function load_items()
     local items = {}
     for name, proto in pairs(game.item_prototypes) do
-        table.insert(
-            items,
-            {
-                n = name,
-                ln = proto.localised_name
-            }
-        )
+        table.insert(items, {n = name, ln = proto.localised_name})
     end
     return items
 end
@@ -38,10 +26,7 @@ local function load_entities()
     local vehicles = {}
     local others = {}
     for name, entity in pairs(game.entity_prototypes) do
-        local entry = {
-            n = name,
-            ln = entity.localised_name
-        }
+        local entry = {n = name, ln = entity.localised_name}
         if Categories.is_building_prototype(entity.type) then
             table.insert(buildings, entry)
         elseif Categories.is_resource_prototype(entity.type) then
@@ -59,7 +44,7 @@ local function load_entities()
         resources = resources,
         robots = robots,
         vehicles = vehicles,
-        others = others
+        others = others,
     }
 end
 
@@ -75,20 +60,18 @@ function M.dump_data(player)
         resource_entities = entities.resources,
         robot_entities = entities.robots,
         vehicle_entities = entities.vehicles,
-        other_entities = entities.others
+        other_entities = entities.others,
     }
-    local ok, possible_error =
-        pcall(
-        function()
-            local json = Json.encode(data)
-            local append = false
-            game.write_file(output_filename, json, append, player.index)
-        end
-    )
+    local ok, possible_error = pcall(function()
+        local json = Json.encode(data)
+        local append = false
+        game.write_file(output_filename, json, append, player.index)
+    end)
     if ok then
         player.print("A11y successfully dumped data to script-output/" .. output_filename)
     else
-        player.print("Failed write data as JSON to " .. output_filename .. "; error was:\n" .. possible_error)
+        player.print("Failed write data as JSON to " .. output_filename .. "; error was:\n"
+                         .. possible_error)
     end
 end
 

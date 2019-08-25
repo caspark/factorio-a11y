@@ -6,103 +6,92 @@ local Position = require("__stdlib__/stdlib/area/position")
 local Table = require("__stdlib__/stdlib/utils/table")
 
 -- Return a map of: name of prototype that takes fuel -> list of fuel categories accepted.
-local get_burners_to_fuel_categories =
-    Memoize(
-    function()
-        local entities = {}
-        for name, prototype in pairs(game.entity_prototypes) do
-            if prototype.burner_prototype then
-                local accepted_fuel_categories = {}
-                for fuel_category, accepted in pairs(prototype.burner_prototype.fuel_categories) do
-                    if accepted then
-                        table.insert(accepted_fuel_categories, fuel_category)
-                    end
+local get_burners_to_fuel_categories = Memoize(function()
+    local entities = {}
+    for name, prototype in pairs(game.entity_prototypes) do
+        if prototype.burner_prototype then
+            local accepted_fuel_categories = {}
+            for fuel_category, accepted in pairs(prototype.burner_prototype.fuel_categories) do
+                if accepted then
+                    table.insert(accepted_fuel_categories, fuel_category)
                 end
-                entities[name] = accepted_fuel_categories
             end
+            entities[name] = accepted_fuel_categories
         end
-        return entities
     end
-)
+    return entities
+end)
 
 -- Return a map of: fuel category -> list of fuel names in this type.
 -- Each list of fuel names is sorted from best fuel to worst fuel.
-local get_fuel_categories_to_fuel_names =
-    Memoize(
-    function()
-        local categories = {}
+local get_fuel_categories_to_fuel_names = Memoize(function()
+    local categories = {}
 
-        local all_item_prototypes = game.item_prototypes
-        for name, prototype in pairs(all_item_prototypes) do
-            if prototype.fuel_category then
-                if categories[prototype.fuel_category] ~= nil then
-                    local list_of_fuels = categories[prototype.fuel_category]
-                    table.insert(list_of_fuels, name)
-                else
-                    categories[prototype.fuel_category] = {
-                        name
-                    }
-                end
+    local all_item_prototypes = game.item_prototypes
+    for name, prototype in pairs(all_item_prototypes) do
+        if prototype.fuel_category then
+            if categories[prototype.fuel_category] ~= nil then
+                local list_of_fuels = categories[prototype.fuel_category]
+                table.insert(list_of_fuels, name)
+            else
+                categories[prototype.fuel_category] = {name}
             end
         end
-
-        for _, list_of_fuels in pairs(categories) do
-            table.sort(
-                list_of_fuels,
-                function(fuel_name_a, fuel_name_b)
-                    return all_item_prototypes[fuel_name_a].fuel_value > all_item_prototypes[fuel_name_b].fuel_value
-                end
-            )
-        end
-
-        return categories
     end
-)
+
+    for _, list_of_fuels in pairs(categories) do
+        table.sort(list_of_fuels, function(fuel_name_a, fuel_name_b)
+            return all_item_prototypes[fuel_name_a].fuel_value
+                       > all_item_prototypes[fuel_name_b].fuel_value
+        end)
+    end
+
+    return categories
+end)
 
 -- Return a map of: name of fuel burning prototype -> list of fuel item names this prototype accepts
 -- Each list of fuel names is sorted from best fuel to worst fuel.
-local get_burners_to_fuel_names =
-    Memoize(
-    function()
-        local burners = {}
+local get_burners_to_fuel_names = Memoize(function()
+    local burners = {}
 
-        local fuel_categories_to_fuel_names = get_fuel_categories_to_fuel_names()
-        local all_item_prototypes = game.item_prototypes
+    local fuel_categories_to_fuel_names = get_fuel_categories_to_fuel_names()
+    local all_item_prototypes = game.item_prototypes
 
-        local b_to_f = get_burners_to_fuel_categories()
-        Logger.log("b_to_f")
-        Logger.log(b_to_f)
+    local b_to_f = get_burners_to_fuel_categories()
+    Logger.log("b_to_f")
+    Logger.log(b_to_f)
 
-        for burner_name, fuel_categories in pairs(b_to_f) do
-            local list_of_fuels = {}
-            for _, fuel_category in pairs(fuel_categories) do
-                for _, fuel_name in pairs(fuel_categories_to_fuel_names[fuel_category]) do
-                    table.insert(list_of_fuels, fuel_name)
-                end
+    for burner_name, fuel_categories in pairs(b_to_f) do
+        local list_of_fuels = {}
+        for _, fuel_category in pairs(fuel_categories) do
+            for _, fuel_name in pairs(fuel_categories_to_fuel_names[fuel_category]) do
+                table.insert(list_of_fuels, fuel_name)
             end
-
-            table.sort(
-                list_of_fuels,
-                function(fuel_name_a, fuel_name_b)
-                    return all_item_prototypes[fuel_name_a].fuel_value > all_item_prototypes[fuel_name_b].fuel_value
-                end
-            )
-
-            burners[burner_name] = list_of_fuels
         end
 
-        return burners
+        table.sort(list_of_fuels, function(fuel_name_a, fuel_name_b)
+            return all_item_prototypes[fuel_name_a].fuel_value
+                       > all_item_prototypes[fuel_name_b].fuel_value
+        end)
+
+        burners[burner_name] = list_of_fuels
     end
-)
+
+    return burners
+end)
 
 local function request_ui_rerender(player)
     Game.get_or_set_data("refuel", player.index, "force_rerender", true, true)
 end
 
 local function get_all_reachable_refuelable_entities(player)
-    local reach_area = Area.adjust({player.position, player.position}, {player.reach_distance, player.reach_distance})
+    local reach_area = Area.adjust({player.position, player.position},
+                                   {player.reach_distance, player.reach_distance})
     local fuelable_things = Table.keys(get_burners_to_fuel_categories())
-    local all_fuelable = player.surface.find_entities_filtered {area = reach_area, name = fuelable_things}
+    local all_fuelable = player.surface.find_entities_filtered{
+        area = reach_area,
+        name = fuelable_things,
+    }
 
     local results = {}
     if all_fuelable then
@@ -153,9 +142,11 @@ local function refuel_entity(player, target, refuel_count)
             if refuel_count > fuel_owned_count then
                 refuel_count = fuel_owned_count
             end
-            Logger.log("Will try to load " .. q(target.name) .. " with " .. refuel_count .. " of " .. q(fuel_name))
+            Logger.log("Will try to load " .. q(target.name) .. " with " .. refuel_count .. " of "
+                           .. q(fuel_name))
 
-            local fuel_loaded_count = target_fuel_inventory.insert({name = fuel_name, count = refuel_count})
+            local fuel_loaded_count = target_fuel_inventory.insert(
+                                          {name = fuel_name, count = refuel_count})
             if fuel_loaded_count > 0 then
                 local used_fuel = {name = fuel_name, count = fuel_loaded_count}
                 local removed_count = player.get_main_inventory().remove(used_fuel)
@@ -220,7 +211,8 @@ function M.refuel_closest(player)
         if error ~= nil then
             player.print(error)
         else
-            player.print("Refueled closest " .. q(target.name) .. " with " .. stack.count .. " " .. q(stack.name))
+            player.print("Refueled closest " .. q(target.name) .. " with " .. stack.count .. " "
+                             .. q(stack.name))
         end
     else
         player.print("Nothing in reach which can be refueled!")
@@ -256,9 +248,11 @@ function M.refuel_everything(player)
             end
             local fuel_used_msg = (", "):join(fuel_used_descs)
             if refueled_count == targets_count then
-                player.print("Refueled all " .. targets_count .. " entities in reach using " .. fuel_used_msg)
+                player.print("Refueled all " .. targets_count .. " entities in reach using "
+                                 .. fuel_used_msg)
             else
-                local msg = "Refueled " .. refueled_count .. " of " .. targets_count .. " entities using "
+                local msg = "Refueled " .. refueled_count .. " of " .. targets_count
+                                .. " entities using "
                 msg = msg .. fuel_used_msg .. "; last failure reason was:\n" .. last_failure
                 player.print(msg)
             end
@@ -275,7 +269,8 @@ function M.refuel_selection(player)
         if error ~= nil then
             player.print(error)
         else
-            player.print("Refueled hovered " .. q(target.name) .. " with " .. stack.count .. " " .. q(stack.name))
+            player.print("Refueled hovered " .. q(target.name) .. " with " .. stack.count .. " "
+                             .. q(stack.name))
         end
     else
         player.print("No cursor selection to refuel!")
@@ -283,10 +278,12 @@ function M.refuel_selection(player)
 end
 
 function M.render_ui(player)
-    local ui_last_player_pos =
-        Game.get_or_set_data("refuel", player.index, "last_player_pos", false, {x = nil, y = nil})
-    local ui_force_rerender = Game.get_or_set_data("refuel", player.index, "force_rerender", false, false)
-    if player.position.x == ui_last_player_pos.x and player.position.y == ui_last_player_pos.y and not ui_force_rerender then
+    local ui_last_player_pos = Game.get_or_set_data("refuel", player.index, "last_player_pos",
+                                                    false, {x = nil, y = nil})
+    local ui_force_rerender = Game.get_or_set_data("refuel", player.index, "force_rerender", false,
+                                                   false)
+    if player.position.x == ui_last_player_pos.x and player.position.y == ui_last_player_pos.y
+        and not ui_force_rerender then
         -- bail out to avoid rerendering when position has not changed
         return
     else
@@ -308,9 +305,8 @@ function M.render_ui(player)
 
     -- draw closest fuelable
     if closest_refuelable_entity then
-        ui_ids[#ui_ids + 1] =
-            rendering.draw_circle(
-            {
+        ui_ids[#ui_ids + 1] = rendering.draw_circle(
+                                  {
                 color = defines.color.yellow,
                 radius = 1,
                 width = 2,
@@ -320,19 +316,15 @@ function M.render_ui(player)
                 surface = player.surface,
                 players = {player.index},
                 visible = true,
-                draw_on_ground = false
-            }
-        )
+                draw_on_ground = false,
+            })
     end
 end
 
 function M.register_event_handlers()
-    Event.register(
-        defines.events.on_player_mined_item,
-        function(event)
-            request_ui_rerender(game.players[event.player_index])
-        end
-    )
+    Event.register(defines.events.on_player_mined_item, function(event)
+        request_ui_rerender(game.players[event.player_index])
+    end)
 end
 
 return M

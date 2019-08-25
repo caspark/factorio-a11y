@@ -20,70 +20,20 @@ local M = {}
 M.resource_prototypes = {"resource", "tree", "simple-entity"}
 
 M.building_prototypes = {
-    "accumulator",
-    "ammo-turret",
-    "arithmetic-combinator",
-    "artillery-turret",
-    "assembling-machine",
-    "beacon",
-    "boiler",
-    "constant-combinator",
-    "container",
-    "curved-rail",
-    "decider-combinator",
-    "electric-energy-interface",
-    "electric-pole",
-    "electric-turret",
-    "fluid-turret",
-    "furnace",
-    "gate",
-    "generator",
-    "heat-interface",
-    "heat-pipe",
-    "infinity-container",
-    "infinity-pipe",
-    "inserter",
-    "lab",
-    "lamp",
-    "loader",
-    "logistic-container",
-    "mining-drill",
-    "offshore-pump",
-    "pipe-to-ground",
-    "pipe",
-    "power-switch",
-    "programmable-speaker",
-    "pump",
-    "radar",
-    "rail-chain-signal",
-    "rail-signal",
-    "reactor",
-    "roboport",
-    "rocket-silo",
-    "solar-panel",
-    "splitter",
-    "storage-tank",
-    "straight-rail",
-    "train-stop",
-    "transport-belt",
-    "turret",
-    "underground-belt",
-    "wall"
+    "accumulator", "ammo-turret", "arithmetic-combinator", "artillery-turret", "assembling-machine",
+    "beacon", "boiler", "constant-combinator", "container", "curved-rail", "decider-combinator",
+    "electric-energy-interface", "electric-pole", "electric-turret", "fluid-turret", "furnace",
+    "gate", "generator", "heat-interface", "heat-pipe", "infinity-container", "infinity-pipe",
+    "inserter", "lab", "lamp", "loader", "logistic-container", "mining-drill", "offshore-pump",
+    "pipe-to-ground", "pipe", "power-switch", "programmable-speaker", "pump", "radar",
+    "rail-chain-signal", "rail-signal", "reactor", "roboport", "rocket-silo", "solar-panel",
+    "splitter", "storage-tank", "straight-rail", "train-stop", "transport-belt", "turret",
+    "underground-belt", "wall",
 }
 
-M.robot_prototypes = {
-    "combat-robot",
-    "construction-robot",
-    "logistic-robot"
-}
+M.robot_prototypes = {"combat-robot", "construction-robot", "logistic-robot"}
 
-M.vehicle_prototypes = {
-    "car",
-    "artillery-wagon",
-    "cargo-wagon",
-    "fluid-wagon",
-    "locomotive"
-}
+M.vehicle_prototypes = {"car", "artillery-wagon", "cargo-wagon", "fluid-wagon", "locomotive"}
 
 -- turn arrays into set-like tables for quick lookup
 local building_prototypes_set = Table.array_to_dictionary(M.building_prototypes, true)

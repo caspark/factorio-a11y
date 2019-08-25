@@ -29,20 +29,17 @@ end
 -- ============== On Tick event ==============
 -- For efficiency and clarity of control flow, we register only one on-tick handler.
 
-Event.register(
-    defines.events.on_tick,
-    function(_event)
-        for _, player in pairs(game.players) do
-            -- do any game state updates first to avoid UI being out of date
-            Run.try_move_player_along_path(player)
+Event.register(defines.events.on_tick, function(_event)
+    for _, player in pairs(game.players) do
+        -- do any game state updates first to avoid UI being out of date
+        Run.try_move_player_along_path(player)
 
-            -- then render the UI
-            Mine.render_ui(player)
-            Refuel.render_ui(player)
-            Run.render_ui(player)
-        end
+        -- then render the UI
+        Mine.render_ui(player)
+        Refuel.render_ui(player)
+        Run.render_ui(player)
     end
-)
+end)
 
 -- ============== Event handlers ==============
 -- Register all event handlers in one place to keep control flow clear.
@@ -68,14 +65,11 @@ local hotkey_actions = {
     ["hotkey-mine-tile-under-player"] = Mine.mine_tile_under_player,
     ["hotkey-refuel-closest"] = Refuel.refuel_closest,
     ["hotkey-refuel-everything"] = Refuel.refuel_everything,
-    ["hotkey-refuel-selection"] = Refuel.refuel_selection
+    ["hotkey-refuel-selection"] = Refuel.refuel_selection,
 }
-Event.register(
-    Table.keys(hotkey_actions),
-    function(event)
-        hotkey_actions[event.input_name](game.players[event.player_index])
-    end
-)
+Event.register(Table.keys(hotkey_actions), function(event)
+    hotkey_actions[event.input_name](game.players[event.player_index])
+end)
 
 -- ============== Command-based input ==============
 -- A11y provides functions intended to be invoked directly by the player.
@@ -101,6 +95,6 @@ a11y_api = {
     count_item = Inventory.count_item,
     craft_item = Craft.craft_item,
     craft_selection = Craft.craft_selection,
-    dump_data = Dump.dump_data
+    dump_data = Dump.dump_data,
 }
 Commands.register_commands(a11y_api)

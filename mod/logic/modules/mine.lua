@@ -10,13 +10,13 @@ local function request_ui_rerender(player)
 end
 
 local function get_closest_reachable_resource(player)
-    local resource_reach_area =
-        Area.adjust(
-        {player.position, player.position},
-        {player.resource_reach_distance, player.resource_reach_distance}
-    )
-    local all_resources =
-        player.surface.find_entities_filtered {area = resource_reach_area, type = Categories.resource_prototypes}
+    local resource_reach_area = Area.adjust({player.position, player.position}, {
+        player.resource_reach_distance, player.resource_reach_distance,
+    })
+    local all_resources = player.surface.find_entities_filtered{
+        area = resource_reach_area,
+        type = Categories.resource_prototypes,
+    }
 
     local closest_resource = nil
     local closest_dist = math.huge
@@ -33,11 +33,11 @@ local function get_closest_reachable_resource(player)
 end
 
 local function get_closest_reachable_building(player)
-    local reach_area = Area.adjust({player.position, player.position}, {player.reach_distance, player.reach_distance})
-    local all_buildings =
-        player.surface.find_entities_filtered {
+    local reach_area = Area.adjust({player.position, player.position},
+                                   {player.reach_distance, player.reach_distance})
+    local all_buildings = player.surface.find_entities_filtered{
         area = reach_area,
-        type = Categories.building_prototypes
+        type = Categories.building_prototypes,
     }
     local closest_building = nil
     local closest_dist = math.huge
@@ -113,9 +113,12 @@ end
 
 -- render a UI around the player showing their reach
 function M.render_ui(player)
-    local ui_last_player_pos = Game.get_or_set_data("mine", player.index, "last_player_pos", false, {x = nil, y = nil})
-    local ui_force_rerender = Game.get_or_set_data("mine", player.index, "force_rerender", false, false)
-    if player.position.x == ui_last_player_pos.x and player.position.y == ui_last_player_pos.y and not ui_force_rerender then
+    local ui_last_player_pos = Game.get_or_set_data("mine", player.index, "last_player_pos", false,
+                                                    {x = nil, y = nil})
+    local ui_force_rerender = Game.get_or_set_data("mine", player.index, "force_rerender", false,
+                                                   false)
+    if player.position.x == ui_last_player_pos.x and player.position.y == ui_last_player_pos.y
+        and not ui_force_rerender then
         -- bail out to avoid rerendering when position has not changed
         return
     else
@@ -140,44 +143,37 @@ function M.render_ui(player)
     end
 
     -- render mining reach
-    ui_ids[#ui_ids + 1] =
-        rendering.draw_circle(
-        {
-            color = defines.color.green,
-            radius = resource_reach,
-            width = 2,
-            filled = false,
-            target = player.position,
-            target_offset = {0, 0},
-            surface = player.surface,
-            players = {player.index},
-            visible = true,
-            draw_on_ground = true
-        }
-    )
+    ui_ids[#ui_ids + 1] = rendering.draw_circle({
+        color = defines.color.green,
+        radius = resource_reach,
+        width = 2,
+        filled = false,
+        target = player.position,
+        target_offset = {0, 0},
+        surface = player.surface,
+        players = {player.index},
+        visible = true,
+        draw_on_ground = true,
+    })
 
     -- render normal reach
-    ui_ids[#ui_ids + 1] =
-        rendering.draw_circle(
-        {
-            color = defines.color.green,
-            radius = normal_reach,
-            width = 2,
-            filled = false,
-            target = player.position,
-            target_offset = {0, 0},
-            surface = player.surface,
-            players = {player.index},
-            visible = true,
-            draw_on_ground = true
-        }
-    )
+    ui_ids[#ui_ids + 1] = rendering.draw_circle({
+        color = defines.color.green,
+        radius = normal_reach,
+        width = 2,
+        filled = false,
+        target = player.position,
+        target_offset = {0, 0},
+        surface = player.surface,
+        players = {player.index},
+        visible = true,
+        draw_on_ground = true,
+    })
 
     -- draw closest resource
     if closest_reachable_resource then
-        ui_ids[#ui_ids + 1] =
-            rendering.draw_circle(
-            {
+        ui_ids[#ui_ids + 1] = rendering.draw_circle(
+                                  {
                 color = defines.color.red,
                 radius = 1,
                 width = 2,
@@ -187,16 +183,14 @@ function M.render_ui(player)
                 surface = player.surface,
                 players = {player.index},
                 visible = true,
-                draw_on_ground = true
-            }
-        )
+                draw_on_ground = true,
+            })
     end
 
     -- draw closest building
     if closest_reachable_building then
-        ui_ids[#ui_ids + 1] =
-            rendering.draw_circle(
-            {
+        ui_ids[#ui_ids + 1] = rendering.draw_circle(
+                                  {
                 color = defines.color.orange,
                 radius = 1,
                 width = 2,
@@ -206,19 +200,15 @@ function M.render_ui(player)
                 surface = player.surface,
                 players = {player.index},
                 visible = true,
-                draw_on_ground = false
-            }
-        )
+                draw_on_ground = false,
+            })
     end
 end
 
 function M.register_event_handlers()
-    Event.register(
-        defines.events.on_player_mined_item,
-        function(event)
-            request_ui_rerender(game.players[event.player_index])
-        end
-    )
+    Event.register(defines.events.on_player_mined_item, function(event)
+        request_ui_rerender(game.players[event.player_index])
+    end)
 end
 
 return M
