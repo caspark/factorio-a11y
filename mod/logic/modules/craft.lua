@@ -26,11 +26,30 @@ local M = {}
 
 -- begin crafting a given item for a given count
 function M.craft_item(player, item_name, item_count)
+    local recipe = game.recipe_prototypes[item_name]
+    if recipe == nil then
+        player.print("Recipe " .. q(item_name) .. " does not exist in the game")
+        return
+    end
+
+    if not player.force.recipes[recipe.name].enabled then
+        player.print("Recipe " .. q(recipe.name) ..
+                         " exists but isn't available for crafting (might require research?)")
+        return
+    end
+
+    if not player.character.prototype.crafting_categories[recipe.category] then
+        player.print("Recipe " .. q(item_name) ..
+                         " cannot be crafted by hand by your player character")
+        return
+    end
+
     local count_available = player.get_craftable_count(item_name)
     if count_available == 0 then
         local missing = get_missing_ingredients(player, item_name, item_count)
         if missing == nil then
-            player.print("Can't craft " .. q(item_name) .. " by hand.")
+            player.print("Can't craft " .. q(item_name) ..
+                             " by hand - a11y is not sure why :(")
         else
             player.print(
                 "Missing ingredients for crafting any " .. q(item_name) ..
