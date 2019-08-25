@@ -180,9 +180,6 @@ factorio_console_commands = {
     "reload mods": """game.reload_mods(); game.player.print("mods reloaded!")""",
     "print my tile position": "game.player.print(game.player.surface.get_tile(game.player.position).position)",
     "print my tile name": "game.player.print(game.player.surface.get_tile(game.player.position).prototype.name)",
-    "count items": """
-        game.player.print(game.player.get_main_inventory().get_item_count('iron-ore'))
-    """,
 }
 factorio_a11y_commands = {
     "draw grid": "render_reach_grid(game.player)",

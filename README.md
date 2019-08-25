@@ -105,6 +105,9 @@ Basically you should say `data reload` anytime after unloading & reloading your 
 ### Inventory management
 
 * `transfer` and `split` will Ctrl + Left/Right Click respectively (and hence work as per [Manipulating Entities](https://wiki.factorio.com/Tutorial:Keyboard_shortcuts#Manipulating_items)).
+* `count <item>` will print out how many of that item you have, and let you know how many more you can craft
+  * `<item>` is the name of an item you might or might not have in your inventory
+  * For example: `count wooden chest`
 * `grab <item>` will transfer that item from your inventory to your cursor (so you can build it or put it into an assembly machine, etc)
   * `<item>` is the name of an item you have in your inventory
   * For example: `grab iron plate` will put a stack of iron plates into your hand.
