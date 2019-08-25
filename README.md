@@ -13,6 +13,31 @@ A11y aims to be compatible with other mods and to preserve existing gameplay mec
 
 Currently the mod is done enough to use for the early (pre combat) game, with new features being added regularly. **Star this repository if you're interested to help me prioritize my projects.**
 
+- [Factorio-A11y](#factorio-a11y)
+  - [Prerequisites](#prerequisites)
+    - [Voice Control Software (required)](#voice-control-software-required)
+    - [Mouse alternatives and replacements (optional)](#mouse-alternatives-and-replacements-optional)
+  - [Ok I'm in, how do I make it work!?](#ok-im-in-how-do-i-make-it-work)
+  - [Voice Grammar](#voice-grammar)
+    - [Data syncing](#data-syncing)
+    - [Utility](#utility)
+    - [Movement](#movement)
+    - [Mining](#mining)
+    - [Crafting](#crafting)
+    - [Manipulating entities](#manipulating-entities)
+    - [Inventory management](#inventory-management)
+    - [Fueling](#fueling)
+  - [Todo list](#todo-list)
+    - [Investigate](#investigate)
+    - [QoL and papercuts](#qol-and-papercuts)
+    - [New Features](#new-features)
+    - [Bugs](#bugs)
+  - [Scratchpad](#scratchpad)
+    - [Voice control grammar notes](#voice-control-grammar-notes)
+    - [Debugging tricks](#debugging-tricks)
+    - [References](#references)
+  - [Attributions](#attributions)
+
 Prerequisites
 -------------
 

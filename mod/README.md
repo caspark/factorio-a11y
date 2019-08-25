@@ -5,6 +5,18 @@ A11y is a Factorio mod that adds shortcuts and a textual command interface (simi
 
 It is intended to be used with voice recognition software; see the README at the root of the repository.
 
+- [A11y for Factorio](#a11y-for-factorio)
+  - [Installing](#installing)
+  - [Visual Aids](#visual-aids)
+  - [Hotkeys](#hotkeys)
+    - [Utility](#utility)
+    - [Movement](#movement)
+    - [Mining](#mining)
+      - [Refueling](#refueling)
+  - [Commands](#commands)
+    - [Available commands](#available-commands)
+    - [Argument explanations](#argument-explanations)
+
 Installing
 ----------
 
@@ -77,7 +89,7 @@ Factorio exposes a UI (hit <kbd>Alt+Shift+Y</kbd> to show it) which is used for 
 ### Available commands
 
 | What                                 | Command                                     |
-|--------------------------------------|---------------------------------------------|
+| ------------------------------------ | ------------------------------------------- |
 | Count item in inventory              | `["count_item", <item_name>]`               |
 | Grab item from inventory into cursor | `["grab", <item_name>]`                     |
 | Craft an item                        | `["craft_item", <item_name>, <item_count>]` |
@@ -87,7 +99,7 @@ Factorio exposes a UI (hit <kbd>Alt+Shift+Y</kbd> to show it) which is used for 
 ### Argument explanations
 
 | Argument    | Type    | Explanation                                                        |
-|-------------|---------|--------------------------------------------------------------------|
+| ----------- | ------- | ------------------------------------------------------------------ |
 | `item_name` | String  | [Item prototype name]. Use the *Explain* hotkey to discover these. |
 | `*_count`   | Integer | A numeric count for something (e.g. amount to craft.)              |
 

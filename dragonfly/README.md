@@ -5,6 +5,13 @@ This is a grammar to control Factorio via voice using Dragonfly.
 
 It will only work properly when the matching mod (`A11y`) is installed into Factorio.
 
+- [Dragonfly voice grammar for Factorio](#dragonfly-voice-grammar-for-factorio)
+- [Installing](#installing)
+  - [Dragonfly with Dragon NaturallySpeaking (via Natlink) on Windows](#dragonfly-with-dragon-naturallyspeaking-via-natlink-on-windows)
+  - [Dragonfly with other speech backends](#dragonfly-with-other-speech-backends)
+  - [Dragonfly on other operating systems](#dragonfly-on-other-operating-systems)
+- [Using](#using)
+
 Installing
 ----------
 
