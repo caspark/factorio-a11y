@@ -1,7 +1,62 @@
 -- Accessibility functions to deal with managing inventories (primarily the player's).
 local Selector = require("__A11y__/logic/utils/selector")
+local Area = require("__stdlib__/stdlib/area/area")
 
 local M = {}
+
+function M.vacuum(player, item_name, item_limit)
+    local reach_area = Area.adjust({player.position, player.position},
+                                   {player.reach_distance, player.reach_distance})
+    -- first pick up everything matching on the ground
+    local items_on_ground = player.surface.find_entities_filtered{
+        area = reach_area,
+        name = 'item-on-ground',
+    }
+    player.print("Have " .. #items_on_ground .. " items on ground")
+
+    local vacuumed_count = 0
+    local found_count = 0
+    local inventory = player.get_main_inventory()
+    local inventory_full = false
+    if items_on_ground then
+        for _, item_on_ground in pairs(items_on_ground) do
+            if player.can_reach_entity(item_on_ground) and item_on_ground.stack.name == item_name then
+                found_count = found_count + item_on_ground.stack.count
+                if vacuumed_count <= item_limit then
+                    if inventory.can_insert(item_on_ground.stack) then
+                        local inserted_count = inventory.insert(item_on_ground.stack)
+                        vacuumed_count = vacuumed_count + inserted_count
+                        item_on_ground.stack.clear()
+                    else
+                        -- inventory is full, bail out
+                        inventory_full = true
+                        break
+                    end
+                end
+            end
+        end
+    end
+
+    local suffix = ''
+    if inventory_full then
+        suffix = suffix .. ' (inventory full)'
+    end
+
+    local msg = ''
+    local remaining_count = found_count - vacuumed_count
+    if vacuumed_count == 0 then
+        msg = 'Failed to vacuum any of ' .. found_count .. ' ' .. q(item_name) .. ' within reach'
+    else
+        msg = 'Vacuumed ' .. vacuumed_count .. ' of ' .. found_count .. ' ' .. q(item_name)
+                  .. ' within reach'
+        player.print(found_count)
+        if remaining_count > 0 then
+            suffix = suffix .. '; ' .. remaining_count .. ' remaining'
+        end
+    end
+
+    player.print(msg .. suffix)
+end
 
 -- get an item from inventory by name
 function M.grab(player, item_name)

@@ -91,8 +91,9 @@ end)
 -- during gameplay.
 
 a11y_api = {
-    grab = Inventory.grab,
     count_item = Inventory.count_item,
+    grab = Inventory.grab,
+    vacuum = Inventory.vacuum,
     craft_item = Craft.craft_item,
     craft_selection = Craft.craft_selection,
     dump_data = Dump.dump_data,

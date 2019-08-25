@@ -131,6 +131,11 @@ def factorio_grab_item(item_name):
     make_factorio_action_a11y_command(["grab", item_name]).execute()
 
 
+def factorio_vacuum_item(item_name, item_limit):
+    make_factorio_action_a11y_command(
+        ["vacuum", item_name, item_limit]).execute()
+
+
 def factorio_craft_item(recipe_name, item_count):
     make_factorio_action_a11y_command(
         ["craft_item", recipe_name, item_count]).execute()
@@ -215,6 +220,7 @@ class FactorioRule(dragonfly.MappingRule):
             # a11y commands that take inputs
             "count <item_name>": dragonfly.Function(factorio_count_item),
             "grab <item_name>": dragonfly.Function(factorio_grab_item),
+            "vacuum [<item_limit>] <item_name>": dragonfly.Function(factorio_vacuum_item),
             "craft [<item_count>] <recipe_name>": dragonfly.Function(factorio_craft_item),
             "craft [<item_count>] it": dragonfly.Function(factorio_craft_selection),
 
@@ -246,6 +252,7 @@ class FactorioRule(dragonfly.MappingRule):
         )),
         dragonfly.Integer(name="n", default=1, min=1, max=20),
         dragonfly.Integer(name="item_count", default=1, min=1, max=101),
+        dragonfly.Integer(name="item_limit", default=100, min=1, max=1001),
         dragonfly.Integer(name="rotate_count", default=1, min=1, max=4),
         dragonfly.DictListRef("item_name", factorio_items),
         dragonfly.DictListRef("recipe_name", factorio_recipes),
