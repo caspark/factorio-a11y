@@ -33,7 +33,7 @@ function M.vacuum(player, item_name, item_limit)
         for _, item_on_ground in pairs(items_on_ground) do
             if player.can_reach_entity(item_on_ground) and item_on_ground.stack.name == item_name then
                 found_count = found_count + item_on_ground.stack.count
-                if vacuumed_count < item_limit then
+                if vacuumed_count < item_limit and not inventory_full then
                     if inventory.can_insert(item_on_ground.stack) then
                         local inserted_count = inventory.insert(item_on_ground.stack)
                         vacuumed_count = vacuumed_count + inserted_count
@@ -46,7 +46,6 @@ function M.vacuum(player, item_name, item_limit)
                     else
                         -- inventory is full, bail out
                         inventory_full = true
-                        break
                     end
                 end
             end
