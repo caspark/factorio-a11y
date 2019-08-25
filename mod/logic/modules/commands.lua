@@ -59,7 +59,7 @@ local function dispatch_command(player, command_and_args)
     end
 end
 
-local function handle_json_command(player, json)
+local function parse_json_command(json)
     local ok, command_or_error =
         pcall(
         function()
@@ -67,7 +67,7 @@ local function handle_json_command(player, json)
         end
     )
     if ok and command_or_error then
-        dispatch_command(player, command_or_error)
+        return command_or_error -- return the parsed command
     else
         player.print("Failed to parse JSON command; json was:\n" .. json .. "\nand error was:\n" .. command_or_error)
     end
@@ -107,11 +107,14 @@ function M.register_event_handlers()
             if string.sub(element.text, -1) ~= "\n" then
                 return
             end
-            local command = element.text:sub(1, -2) -- remove trailing newline
+            local json_command = element.text:sub(1, -2) -- remove trailing newline
 
             local player = game.players[event.player_index]
             M.hide_command_window(player)
-            handle_json_command(player, command)
+            parsed_command = parse_json_command(json_command)
+            if parsed_command ~= nil then
+                dispatch_command(player, parsed_command)
+            end
         end
     )
 end
