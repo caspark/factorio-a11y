@@ -131,6 +131,7 @@ Todo list
 ### Investigate
 
 * Can we see what someone is hovering the UI? Would be useful to "what is" a hovered item in inventory.
+* We should be able to have the pathfinding avoid the player on its own now; walkable mask = https://github.com/wube/factorio-data/blob/master/core/lualib/util.lua#L344
 
 ### QoL and papercuts
 
