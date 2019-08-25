@@ -201,11 +201,13 @@ class FactorioRule(dragonfly.MappingRule):
             "data list items": dragonfly.Function(data_list_items),
             "data list recipes": dragonfly.Function(data_list_recipes),
 
-            "walk <dir_8>": dragonfly.Function(factorio_start_walking),
             "zoom <n>": dragonfly.Function(factorio_set_zoom),
             "zoom out": dragonfly.Function(lambda: factorio_set_zoom(0)),
             "zoom in": dragonfly.Function(lambda: factorio_set_zoom(len(FACTORIO_ZOOM_LEVELS)-2)),
-            "zoom reset": dragonfly.Function(lambda: factorio_set_zoom(len(FACTORIO_ZOOM_LEVELS)//2)),
+            "zoom reset": dragonfly.Function(lambda: factorio_set_zoom(len(FACTORIO_ZOOM_LEVELS) // 2)),
+
+            # walking controls (except for running to cursor)
+            "run <dir_8>": dragonfly.Function(factorio_start_walking),
             "stop": FACTORIO_STOP_WALKING_ACTION,
 
             # make rotate repeatable
@@ -218,7 +220,6 @@ class FactorioRule(dragonfly.MappingRule):
             "grab <item_name>": dragonfly.Function(factorio_grab_item),
             "craft [<item_count>] <recipe_name>": dragonfly.Function(factorio_craft_item),
             "craft [<item_count>] it": dragonfly.Function(factorio_craft_selection),
-
 
             # ally commands bound to hotkeys
             "explain it": dragonfly.Key("as-w"),
