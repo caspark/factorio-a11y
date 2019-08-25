@@ -68,7 +68,7 @@ FACTORIO_UI_DELAY_ACTION = dragonfly.Pause("2")
 
 # 1 is default zoom
 # most zoomed out in vanilla factorio is about 0.375
-# most zoomed in is about
+# most zoomed in is about 2
 FACTORIO_ZOOM_LEVELS = [0.3, 0.4, 0.6, 0.8, 1, 1.2, 1.5, 2]
 
 
