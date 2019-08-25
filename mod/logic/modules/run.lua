@@ -203,19 +203,18 @@ function M.render_ui(player)
                                               {waypoint = 0, dist = nil})
         for i, waypoint in ipairs(waypoints) do
             if i >= progress.waypoint then
-                ui_ids[#ui_ids + 1] = rendering.draw_circle(
-                                          {
-                        color = defines.color.lightblue,
-                        radius = 0.1,
-                        width = 2, -- min width=2 (if radius=0.1) for path to be visible when zoomed out
-                        filled = false,
-                        target = waypoint.position,
-                        target_offset = {0, 0},
-                        surface = player.surface,
-                        players = {player.index},
-                        visible = true,
-                        draw_on_ground = true,
-                    })
+                ui_ids[#ui_ids + 1] = rendering.draw_circle{
+                    color = defines.color.lightblue,
+                    radius = 0.1,
+                    width = 2, -- min width=2 (if radius=0.1) for path to be visible when zoomed out
+                    filled = false,
+                    target = waypoint.position,
+                    target_offset = {0, 0},
+                    surface = player.surface,
+                    players = {player.index},
+                    visible = true,
+                    draw_on_ground = true,
+                }
             end
         end
     end
