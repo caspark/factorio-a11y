@@ -56,7 +56,7 @@ data:extend(
         {
             type = "custom-input",
             name = "hotkey-refuel-everything",
-            key_sequence = "CONTROL + SHIFT + ALT + F"
+            key_sequence = "CONTROL + SHIFT + D"
         },
         {
             type = "custom-input",
