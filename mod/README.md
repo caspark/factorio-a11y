@@ -54,7 +54,7 @@ Mining covers removing builds, getting resources, and removing tiles.
 Refueling covers putting fuel into burner miners/inserters, stone furnaces, cars, etc. The best fuel available in your inventory is always used, unless there is already fuel in the entity, in which case more fuel of that type is added.
 
 * <kbd>Alt+Shift+F</kbd> - refuel entity hovered by cursor
-* <kbd>Ctrl+Alt+Shift+F</kbd> - refuel everything in reach
+* <kbd>Ctrl+Shift+D</kbd> - refuel everything in reach
 * <kbd>Alt+Shift+U</kbd> - refuel closest entity
 
 Commands
