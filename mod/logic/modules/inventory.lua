@@ -2,6 +2,18 @@
 local Selector = require("__A11y__/logic/utils/selector")
 local Area = require("__stdlib__/stdlib/area/area")
 
+local function spawn_floating_text(entity, text, offY)
+    local surface = entity.surface
+    local pos = entity.position
+
+    surface.create_entity({
+        name = "flying-text",
+        position = pos,
+        text = text,
+        color = defines.color.white,
+    })
+end
+
 local M = {}
 
 function M.vacuum(player, item_name, item_limit)
@@ -12,7 +24,6 @@ function M.vacuum(player, item_name, item_limit)
         area = reach_area,
         name = 'item-on-ground',
     }
-    player.print("Have " .. #items_on_ground .. " items on ground")
 
     local vacuumed_count = 0
     local found_count = 0
@@ -22,10 +33,15 @@ function M.vacuum(player, item_name, item_limit)
         for _, item_on_ground in pairs(items_on_ground) do
             if player.can_reach_entity(item_on_ground) and item_on_ground.stack.name == item_name then
                 found_count = found_count + item_on_ground.stack.count
-                if vacuumed_count <= item_limit then
+                if vacuumed_count < item_limit then
                     if inventory.can_insert(item_on_ground.stack) then
                         local inserted_count = inventory.insert(item_on_ground.stack)
                         vacuumed_count = vacuumed_count + inserted_count
+                        spawn_floating_text(item_on_ground, {
+                            "", "+", inserted_count, " ",
+                            game.item_prototypes[item_name].localised_name, " (",
+                            inventory.get_item_count(item_name), ")",
+                        })
                         item_on_ground.stack.clear()
                     else
                         -- inventory is full, bail out
