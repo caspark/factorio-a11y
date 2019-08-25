@@ -207,7 +207,7 @@ function M.render_ui(player)
                                           {
                         color = defines.color.lightblue,
                         radius = 0.1,
-                        width = 1,
+                        width = 2, -- min width=2 (if radius=0.1) for path to be visible when zoomed out
                         filled = false,
                         target = waypoint.position,
                         target_offset = {0, 0},
