@@ -1,6 +1,7 @@
 -- Accessibility functions to deal with managing inventories (primarily the player's).
 local Selector = require("__A11y__/logic/utils/selector")
 local Area = require("__stdlib__/stdlib/area/area")
+local Categories = require("__A11y__/logic/utils/categories")
 
 local function spawn_floating_text(entity, text, offY)
     local surface = entity.surface
@@ -46,6 +47,46 @@ function M.vacuum(player, item_name, item_limit)
                     else
                         -- inventory is full, bail out
                         inventory_full = true
+                    end
+                end
+            end
+        end
+    end
+
+    -- then pick up items from belts
+    local entities = player.surface.find_entities_filtered{
+        area = reach_area,
+        -- we want all the TransportBeltConnectable prototypes
+        name = {"loader", "splitter", "transport-belt", "underground-belt"},
+    }
+    if entities then
+        for _, entity in pairs(entities) do
+            if player.can_reach_entity(entity) then
+                local num_lines = entity.get_max_transport_line_index()
+                for line_index = 1, num_lines do
+                    local line = entity.get_transport_line(line_index)
+                    for line_item_name, line_item_count in pairs(line.get_contents()) do
+                        found_count = found_count + line_item_count
+                        if vacuumed_count < item_limit and not inventory_full then
+                            local line_item_fake_stack =
+                                {
+                                    name = line_item_name,
+                                    count = math.min(line_item_count, item_limit - vacuumed_count),
+                                }
+                            if inventory.can_insert(line_item_fake_stack) then
+                                local inserted_count = inventory.insert(line_item_fake_stack)
+                                vacuumed_count = vacuumed_count + inserted_count
+                                spawn_floating_text(entity, {
+                                    "", "+", inserted_count, " ",
+                                    game.item_prototypes[line_item_name].localised_name, " (",
+                                    inventory.get_item_count(line_item_name), ")",
+                                })
+                                line.remove_item{name = line_item_name, count = inserted_count}
+                            else
+                                -- inventory is full, bail out
+                                inventory_full = true
+                            end
+                        end
                     end
                 end
             end

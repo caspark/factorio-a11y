@@ -136,10 +136,10 @@ Basically you should say `data reload` anytime after unloading & reloading your 
 * `grab <item>` will transfer that item from your inventory to your cursor (so you can build it or put it into an assembly machine, etc)
   * `<item>` is the name of an item you have in your inventory
   * For example: `grab iron plate` will put a stack of iron plates into your hand.
-* `vacuum <count> <item>` will pick up items of that type from ground to your inventory
+* `vacuum <count> <item>` will pick up items of that type from the ground & belts to your inventory
   * `<count>` is the maximum number of items to pick up (default is 100)
   * `<item>` is the name of an item lying on the floor or on a belt within your reach
-  * For example: `vacuum 10 electronic circuit` will move up to 10 basic circuits from the ground into your inventory.
+  * For example: `vacuum 10 electronic circuit` will move up to 10 basic circuits from the ground & belts into your inventory.
 
 ### Fueling
 
