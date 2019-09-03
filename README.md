@@ -168,7 +168,6 @@ Todo list
 * When vacuuming up ammo, put it in your active firearm first (if it fits)
 * Make voice grammar detect Factorio script output location? Or at least read it from config file.
 * Voice grammar should save and load last data loaded from Factorio and restore it upon grammar reload
-* Restore the thing in hand after a "run there"
 * When mining nearest resource, prefer mining things that collide with the player (e.g. trees & rocks) for convenience in clearing a path.
 
 ### New Features
