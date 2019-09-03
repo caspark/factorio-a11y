@@ -3,11 +3,13 @@ local Game = require("__stdlib__/stdlib/game")
 local Is = require("__stdlib__/stdlib/utils/is")
 local Position = require("__stdlib__/stdlib/area/position")
 local Table = require("__stdlib__/stdlib/utils/table")
+local Selector = require("__A11y__/logic/utils/selector")
 
 local M = {}
 
 -- replace whatever the user has grabbed with the runtool.
 function M.grab_runtool(player)
+    Selector.save_held_item(player)
     if player.clean_cursor() then
         player.cursor_stack.set_stack({name = "runtool"})
     end
@@ -269,6 +271,7 @@ function M.register_event_handlers()
             player.print("Running to position " .. target.x .. "," .. target.y)
             M.run_to_target(player, target)
         end
+        Selector.restore_held_item(player)
     end)
 
     Event.register({

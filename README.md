@@ -164,6 +164,8 @@ Todo list
 
 ### QoL and papercuts
 
+* If you're holding a ghost of something and then the real version of it appears in your hand (is mined or crafted or vacuumed, etc), swap the ghost for the real thing.
+* When vacuuming up ammo, put it in your active firearm first (if it fits)
 * Make voice grammar detect Factorio script output location? Or at least read it from config file.
 * Voice grammar should save and load last data loaded from Factorio and restore it upon grammar reload
 * Restore the thing in hand after a "run there"
@@ -171,9 +173,8 @@ Todo list
 
 ### New Features
 
-* Have a way to grab all of an item in range quickly (both from floor and from inventories of items)
 * Have a way to mine everything in range quickly (for clearing trees)
-* Have a way to lay belt (assuming belt is in hand) from first to last click (assuming it's in a row). Maybe show a cross of visual lines as a guide to help line up tiles? Will probably need to check that each tile can be built before starting, and if we fail to build anything then stop building and print an error.
+* Have a way to lay belt (assuming belt is in hand) from first to last click (assuming it's in a row). Maybe show a cross of visual lines as a guide to help line up tiles? Will probably need to check that each tile can be built before starting, and if we fail to build anything then stop building and print an error. Similar to https://mods.factorio.com/mod/replicating-belts
 * Allow aliasing virtual items when crafting or grabbing? E.g. "craft/grab electric"
 
 ### Bugs

@@ -67,7 +67,8 @@ function M.vacuum(player, item_name, item_limit)
                     local line = entity.get_transport_line(line_index)
                     for line_item_name, line_item_count in pairs(line.get_contents()) do
                         found_count = found_count + line_item_count
-                        if vacuumed_count < item_limit and not inventory_full then
+                        if line_item_name == item_name and vacuumed_count < item_limit
+                            and not inventory_full then
                             local line_item_fake_stack =
                                 {
                                     name = line_item_name,
