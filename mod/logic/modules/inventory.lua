@@ -1,6 +1,7 @@
 -- Accessibility functions to deal with managing inventories (primarily the player's).
-local Selector = require("__A11y__/logic/utils/selector")
 local Area = require("__stdlib__/stdlib/area/area")
+local Event = require("__stdlib__/stdlib/event/event")
+local Selector = require("__A11y__/logic/utils/selector")
 local Categories = require("__A11y__/logic/utils/categories")
 
 local function spawn_floating_text(entity, text, offY)
@@ -13,6 +14,20 @@ local function spawn_floating_text(entity, text, offY)
         text = text,
         color = defines.color.white,
     })
+end
+
+local function try_grab_real_item_if_holding_ghost(player)
+    local held_item, held_source = Selector.player_held(player)
+    if held_item ~= nil and held_source == Selector.source.CURSOR_GHOST then
+        local ok, stack = pcall(function()
+            return player.get_main_inventory().find_item_stack(held_item)
+        end)
+        if ok and stack then
+            -- drop the ghost and pick up the real item from our inventory instead
+            player.clean_cursor()
+            player.cursor_stack.transfer_stack(stack)
+        end
+    end
 end
 
 local M = {}
@@ -157,6 +172,14 @@ function M.explain_selection(player)
     else
         player.print("No idea what that is :(")
     end
+end
+
+function M.register_event_handlers()
+    Event.register(defines.events.on_player_main_inventory_changed, function(event)
+        local player = game.players[event.player_index]
+
+        try_grab_real_item_if_holding_ghost(player)
+    end)
 end
 
 return M

@@ -164,7 +164,6 @@ Todo list
 
 ### QoL and papercuts
 
-* If you're holding a ghost of something and then the real version of it appears in your hand (is mined or crafted or vacuumed, etc), swap the ghost for the real thing.
 * When vacuuming up ammo, put it in your active firearm first (if it fits)
 * Make voice grammar detect Factorio script output location? Or at least read it from config file.
 * Voice grammar should save and load last data loaded from Factorio and restore it upon grammar reload

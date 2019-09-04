@@ -44,6 +44,7 @@ end)
 -- ============== Event handlers ==============
 -- Register all event handlers in one place to keep control flow clear.
 
+Inventory.register_event_handlers()
 Mine.register_event_handlers()
 Refuel.register_event_handlers()
 Run.register_event_handlers()
