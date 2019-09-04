@@ -141,6 +141,8 @@ Basically you should say `data reload` anytime after unloading & reloading your 
   * `<item>` is the name of an item lying on the floor or on a belt within your reach
   * For example: `vacuum 10 electronic circuit` will move up to 10 basic circuits from the ground & belts into your inventory.
 
+NB: for convenience, if you're holding a ghost of an item and your inventory gains one of those items, the ghost will be swapped out for the real item.
+
 ### Fueling
 
 * `refuel here` will refuel the closest refuelable entity
