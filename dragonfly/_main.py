@@ -232,8 +232,11 @@ class FactorioRule(dragonfly.MappingRule):
             "mine it": dragonfly.Key("as-m"),
             "mine tile": dragonfly.Key("as-t"),
             "refuel it": dragonfly.Key("as-f"),
-            "refuel here": dragonfly.Key("as-u"),
             "refuel everything": dragonfly.Key("cs-d"),
+            "refuel here": dragonfly.Key("as-u"),
+            "reload it": dragonfly.Key("cs-r"),
+            "reload everything": dragonfly.Key("csa-e"),
+            "reload here": dragonfly.Key("csa-l"),
 
             # mouse shortcuts
             "paste": dragonfly.Key("shift:down") + dragonfly.Mouse("left") + dragonfly.Key("shift:up"),

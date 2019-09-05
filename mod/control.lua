@@ -9,6 +9,7 @@ local Dump = require("__A11y__/logic/modules/dump")
 local Inventory = require("__A11y__/logic/modules/inventory")
 local Mine = require("__A11y__/logic/modules/mine")
 local Refuel = require("__A11y__/logic/modules/refuel")
+local Reload = require("__A11y__/logic/modules/reload")
 local Run = require("__A11y__/logic/modules/run")
 
 -- ============== Global helpers ==============
@@ -37,6 +38,7 @@ Event.register(defines.events.on_tick, function(_event)
         -- then render the UI
         Mine.render_ui(player)
         Refuel.render_ui(player)
+        Reload.render_ui(player)
         Run.render_ui(player)
     end
 end)
@@ -47,6 +49,7 @@ end)
 Inventory.register_event_handlers()
 Mine.register_event_handlers()
 Refuel.register_event_handlers()
+Reload.register_event_handlers()
 Run.register_event_handlers()
 Commands.register_event_handlers()
 
@@ -67,6 +70,9 @@ local hotkey_actions = {
     ["hotkey-refuel-closest"] = Refuel.refuel_closest,
     ["hotkey-refuel-everything"] = Refuel.refuel_everything,
     ["hotkey-refuel-selection"] = Refuel.refuel_selection,
+    ["hotkey-reload-closest"] = Reload.reload_closest,
+    ["hotkey-reload-everything"] = Reload.reload_everything,
+    ["hotkey-reload-selection"] = Reload.reload_selection,
 }
 Event.register(Table.keys(hotkey_actions), function(event)
     hotkey_actions[event.input_name](game.players[event.player_index])

@@ -175,6 +175,8 @@ Todo list
 
 * Have a way to mine everything in range quickly (for clearing trees)
 * Have a way to lay belt (assuming belt is in hand) from first to last click (assuming it's in a row). Maybe show a cross of visual lines as a guide to help line up tiles? Will probably need to check that each tile can be built before starting, and if we fail to build anything then stop building and print an error. Similar to https://mods.factorio.com/mod/replicating-belts
+* Repairing items, using repair packs (ideally it should take some time to repair something, like in the base game)
+* Reloading turrets/own guns using ammo in inventory - see https://forums.factorio.com/viewtopic.php?f=25&t=67074 for reloading player's guns
 * Allow aliasing virtual items when crafting or grabbing? E.g. "craft/grab electric"
 
 ### Bugs

@@ -192,7 +192,7 @@ function M.render_ui(player)
         ui_ids[#ui_ids + 1] = rendering.draw_circle(
                                   {
                 color = defines.color.orange,
-                radius = 1,
+                radius = 0.5,
                 width = 2,
                 filled = false,
                 target = closest_reachable_building.position,
