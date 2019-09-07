@@ -59,8 +59,8 @@ local get_ammo_categories_to_ammo_names = Memoize(function()
         end
     end
 
-    for _, list_of_ammos in pairs(categories) do
-        table.sort(list_of_ammos, function(ammo_name_a, ammo_name_b)
+    for _, list_of_ammo in pairs(categories) do
+        table.sort(list_of_ammo, function(ammo_name_a, ammo_name_b)
             local ammo_name_a_score = calc_production_costs_of_items()[ammo_name_a] or 0
             local ammo_name_b_score = calc_production_costs_of_items()[ammo_name_b] or 0
             return ammo_name_a_score > ammo_name_b_score
@@ -70,34 +70,31 @@ local get_ammo_categories_to_ammo_names = Memoize(function()
     return categories
 end)
 
--- TODO rejigger to make this work with ammo
--- Return a map of: name of fuel burning prototype -> list of fuel item names this prototype accepts
--- Each list of fuel names is sorted from best fuel to worst fuel.
-local get_burners_to_fuel_names = Memoize(function()
-    local burners = {}
+-- Return a map of: name of reloadable prototype -> list of ammo item names this prototype accepts
+-- Each list of ammo names is sorted from best ammo to worst ammo.
+local get_reloadables_to_ammo_names = Memoize(function()
+    local reloadables = {}
 
-    local fuel_categories_to_fuel_names = get_ammo_categories_to_ammo_names()
-    local all_item_prototypes = game.item_prototypes
+    local ammo_categories_to_ammo_names = get_ammo_categories_to_ammo_names()
 
-    local b_to_f = get_burners_to_fuel_categories()
-
-    for burner_name, fuel_categories in pairs(b_to_f) do
-        local list_of_fuels = {}
-        for _, fuel_category in pairs(fuel_categories) do
-            for _, fuel_name in pairs(fuel_categories_to_fuel_names[fuel_category]) do
-                table.insert(list_of_fuels, fuel_name)
+    for reloadable_name, ammo_categories in pairs(get_reloadables_to_ammo_categories()) do
+        local list_of_ammo = {}
+        for _, ammo_category in pairs(ammo_categories) do
+            for _, ammo_name in pairs(ammo_categories_to_ammo_names[ammo_category]) do
+                table.insert(list_of_ammo, ammo_name)
             end
         end
 
-        table.sort(list_of_fuels, function(fuel_name_a, fuel_name_b)
-            return all_item_prototypes[fuel_name_a].fuel_value
-                       > all_item_prototypes[fuel_name_b].fuel_value
+        table.sort(list_of_ammo, function(ammo_name_a, ammo_name_b)
+            local ammo_name_a_score = calc_production_costs_of_items()[ammo_name_a] or 0
+            local ammo_name_b_score = calc_production_costs_of_items()[ammo_name_b] or 0
+            return ammo_name_a_score > ammo_name_b_score
         end)
 
-        burners[burner_name] = list_of_fuels
+        reloadables[reloadable_name] = list_of_ammo
     end
 
-    return burners
+    return reloadables
 end)
 
 local function request_ui_rerender(player)
@@ -139,100 +136,117 @@ local function get_closest_reloadable_entity(player)
     return closest_reloadable
 end
 
--- Reload `target` using up to `ammo_count` fuel from the inventory of `player`.
--- Better fuel will be used first.
+local function get_ammo_inventory_for_entity(target)
+    if target.prototype.type == 'ammo-turret' then
+        return target.get_inventory(defines.inventory.turret_ammo)
+    elseif target.prototype.type == 'car' then
+        return target.get_inventory(defines.inventory.car_ammo)
+    else
+        return nil
+    end
+end
+
+-- Reload `target` using up to `ammo_count` ammo from the inventory of `player`.
+-- Better ammo will be used first.
 -- Returns 2 values:
--- 1. error message if refueling failed or `nil` if it succeeded
--- 2. `SimpleItemStack` containing the fuel name and count refueled with
+-- 1. error message if reloading failed or `nil` if it succeeded
+-- 2. `SimpleItemStack` containing the ammo name and count reloaded with
 local function reload_entity(player, target, ammo_count)
-    -- TODO: need to implement this still.
-    -- https://lua-api.factorio.com/latest/defines.html#defines.inventory has a diff inventory type for every different thing that we might want to refuel.
-    -- So probably the best way to handle this is to split the known ammunition taking objects into a separate table between guns, cars, and turrets
-    -- Then we can see what type "target" is by checking its prototype against the known types that take ammo, and then fetch the correct inventory for the type that way.
-
-    local target_fuel_inventory = target.get_inventory(defines.inventory.fuel)
-    if not target_fuel_inventory then
-        return q(target.name) .. " does not take fuel!"
+    local target_ammo_inventory = get_ammo_inventory_for_entity(target)
+    if not target_ammo_inventory then
+        return q(target.name) .. " does not take ammo!"
     end
 
-    local fuel_names = get_burners_to_fuel_names()[target.name]
-    if not fuel_names then
-        return q(target.name) .. " can't be refueled - no fuel exists for it in the game!"
+    local ammo_names = get_reloadables_to_ammo_names()[target.name]
+    if not ammo_names then
+        return q(target.name) .. " can't be reloaded - no ammo exists for it in the game!"
     end
-    Logger.log("Acceptable fuel for " .. q(target.name) .. ": " .. q_list(fuel_names))
+    Logger.log("Acceptable ammo for " .. q(target.name) .. ": " .. q_list(ammo_names))
 
-    for _, fuel_name in pairs(fuel_names) do
-        local fuel_owned_count = player.get_item_count(fuel_name)
-        if fuel_owned_count > 0 then
-            if ammo_count > fuel_owned_count then
-                ammo_count = fuel_owned_count
+    for _, ammo_name in pairs(ammo_names) do
+        local ammo_owned_count = player.get_item_count(ammo_name)
+        if ammo_owned_count > 0 then
+            if ammo_count > ammo_owned_count then
+                ammo_count = ammo_owned_count
             end
             Logger.log("Will try to load " .. q(target.name) .. " with " .. ammo_count .. " of "
-                           .. q(fuel_name))
+                           .. q(ammo_name))
 
-            local fuel_loaded_count = target_fuel_inventory.insert(
-                                          {name = fuel_name, count = ammo_count})
-            if fuel_loaded_count > 0 then
-                local used_fuel = {name = fuel_name, count = fuel_loaded_count}
-                local removed_count = player.get_main_inventory().remove(used_fuel)
-                if removed_count ~= fuel_loaded_count then
-                    -- despite our earlier checks, we've added more fuel to the target than we had
-                    -- in our inventory, so we've made fuel out of nothing.
+            local ammo_loaded_count = target_ammo_inventory.insert(
+                                          {name = ammo_name, count = ammo_count})
+            Logger.log("Loaded " .. ammo_loaded_count .. " of " .. q(ammo_name))
+            if ammo_loaded_count > 0 then
+                local used_ammo = {name = ammo_name, count = ammo_loaded_count}
+                local removed_count = player.get_main_inventory().remove(used_ammo)
+                if removed_count < ammo_loaded_count then
+                    -- try to remove equipped ammo from player
+                    local remaining_to_remove = {
+                        name = ammo_name,
+                        count = ammo_loaded_count - removed_count,
+                    }
+                    local extra_removed = player.get_inventory(defines.inventory.character_ammo)
+                                              .remove(remaining_to_remove)
+                    if extra_removed then
+                        removed_count = removed_count + extra_removed
+                    end
+                end
+                if removed_count ~= ammo_loaded_count then
+                    -- despite our earlier checks, we've added more ammo to the target than we had
+                    -- in our inventory, so we've made ammo out of nothing.
                     -- welp, if this happens there's not much to do other than log it and move on.
-                    local msg = "WARNING: added " .. fuel_loaded_count .. " " .. q(fuel_name)
-                    msg = msg .. " fuel to " .. q(target.name) .. " but could only remove "
+                    local msg = "WARNING: added " .. ammo_loaded_count .. " " .. q(ammo_name)
+                    msg = msg .. " ammo to " .. q(target.name) .. " but could only remove "
                     msg = msg .. removed_count .. " from player inventory"
                     Logger.log(msg)
                 end
 
                 ---- now we're all done!
-                return nil, used_fuel
+                return nil, used_ammo
             else
-                -- We failed to load in what we tried to load, despite the target accepting this fuel.
-                -- This can happen when e.g. there's coal in the target with no empty slots in its
-                -- inventory, but we ran out of coal so we tried to load it with wood; this fails
-                -- since there's no empty item slot for the wood to fit.
-                -- This isn't a problem because we'll eventually get to the fuel type that the
-                -- target is currently burning
-                Logger.log("Failed to load " .. q(target.name) .. " with any " .. q(fuel_name))
+                -- We failed to load in what we tried to load, despite the target accepting this ammo.
+                -- This can happen when e.g. there's piercing bullets in the target with no empty slots in its
+                -- inventory, but we ran out of piercing bullets so we tried to load it with normal bullets; this fails
+                -- since there's no empty item slot for the normal bullets to fit.
+                -- This isn't a problem because we'll eventually get to the ammo type that the
+                -- target is currently loaded with
+                Logger.log("Failed to load " .. q(target.name) .. " with any " .. q(ammo_name))
             end
+        else
+            Logger.log("Don't own any ammo of type " .. q(ammo_name) .. ", trying next")
         end
     end
 
-    -- If we got here, then we don't have valid fuel for the target.
+    -- If we got here, then we don't have valid ammo for the target.
     -- The cause is one of:
-    -- * the target is burning fuel which we don't have
-    -- * the target is full of fuel and has no more space
-    -- * we flat out need to collect some fuel of that fuel category
+    -- * the target is loaded with ammo which we don't have
+    -- * the target is full of ammo and has no more space
+    -- * we flat out need to collect some ammo of that ammo category
     -- Try to give the player a helpful error message in each case.
-    local fuels_in_use = {}
-    local has_fuels_in_use = false
-    local player_has_all_fuels = true
-    for fuel_name, _ in pairs(target_fuel_inventory.get_contents()) do
-        table.insert(fuels_in_use, fuel_name)
-        has_fuels_in_use = true
-        if player.get_item_count(fuel_name) == 0 then
-            player_has_all_fuels = false
+    local ammos_in_use = {}
+    local has_ammos_in_use = false
+    local player_has_all_ammos = true
+    for ammo_name, _ in pairs(target_ammo_inventory.get_contents()) do
+        table.insert(ammos_in_use, ammo_name)
+        has_ammos_in_use = true
+        if player.get_item_count(ammo_name) == 0 then
+            player_has_all_ammos = false
         end
     end
-    local msg = "Can't refuel " .. q(target.name) .. " - "
-    if has_fuels_in_use then
-        if player_has_all_fuels then
-            return msg .. "it is fully refueled already!"
+    local msg = "Can't reload " .. q(target.name) .. " - "
+    if has_ammos_in_use then
+        if player_has_all_ammos then
+            return msg .. "it is fully reloaded already!"
         else
-            return msg .. "it's burning " .. q_list(fuels_in_use) .. " and you have none"
+            return msg .. "it's loaded with " .. q_list(ammos_in_use) .. " and you have none"
         end
     else
-        return msg .. "don't have any " .. q_list(fuel_names) .. " fuel"
+        return msg .. "don't have any " .. q_list(ammo_names) .. " ammo"
     end
 end
 
 local M = {}
 
 function M.reload_closest(player)
-    -- TODO needs to be implemented still
-    player.print("TODO reload closest entity")
-
     local target = get_closest_reloadable_entity(player)
     if target then
         local error, stack = reload_entity(player, target, 20)
@@ -248,8 +262,6 @@ function M.reload_closest(player)
 end
 
 function M.reload_everything(player)
-    player.print("TODO reload everything") -- TODO needs implementing still
-
     local targets = get_all_reachable_reloadable_entities(player)
     local targets_count = #targets
     if targets_count > 0 then
@@ -273,8 +285,8 @@ function M.reload_everything(player)
             player.print("Failed to reload anything; last failure reason was:\n" .. last_failure)
         else
             local ammo_used_descs = {}
-            for fuel_name, count in pairs(ammo_used) do
-                table.insert(ammo_used_descs, count .. " " .. fuel_name)
+            for ammo_name, count in pairs(ammo_used) do
+                table.insert(ammo_used_descs, count .. " " .. ammo_name)
             end
             local ammo_used_msg = (", "):join(ammo_used_descs)
             if reloaded_count == targets_count then
@@ -293,8 +305,6 @@ function M.reload_everything(player)
 end
 
 function M.reload_selection(player)
-    player.print("TODO reload selection") -- TODO needs implementing still
-
     local target = player.selected
     if target then
         local error, stack = reload_entity(player, target, 20)
