@@ -14,31 +14,25 @@ local get_reloadables_to_ammo_categories = Memoize(
                                                function()
         local prototypes = {}
         for name, prototype in pairs(game.entity_prototypes) do
-            -- first look for gun turrets
-            if prototype.attack_parameters ~= nil and prototype.attack_parameters.ammo_category
-                ~= nil then
-                prototypes[name] = {prototype.attack_parameters.ammo_category}
-            end
-
-            -- we also need to look for vehicles with guns on them
-            if prototype.guns then
-                local accepted_ammo_categories = {}
+            local accepted_ammo_categories = {}
+            if prototype.type == 'ammo-turret' then -- standard gun turrets
+                table.insert(accepted_ammo_categories, prototype.attack_parameters.ammo_category)
+            elseif prototype.type == 'car' then -- also covers tanks
                 for _gun_name, gun_prototype in pairs(prototype.guns) do
                     table.insert(accepted_ammo_categories,
                                  gun_prototype.attack_parameters.ammo_category)
                 end
+            elseif prototype.type == 'artillery-wagon' or prototype.type == 'artillery-turret' then
+                -- doesn't seem to be a way to list the ammo of an artillery wagon or turret
+                -- programmatically, so we just hardcode it to be `artillery-shell`, as that's what
+                -- artillery shells say their ammo category is.
+                table.insert(accepted_ammo_categories, 'artillery-shell')
+            end
+            if #accepted_ammo_categories > 0 then
                 prototypes[name] = accepted_ammo_categories
             end
         end
 
-        -- guns themselves can also be reloaded, and because they're items, they'll never conflict
-        -- with gun turrets or vehicles, so just go ahead and find them here too
-        for name, prototype in pairs(game.item_prototypes) do
-            if prototype.attack_parameters ~= nil and prototype.attack_parameters.ammo_category
-                ~= nil then
-                prototypes[name] = {prototype.attack_parameters.ammo_category}
-            end
-        end
         return prototypes
     end)
 
@@ -141,6 +135,10 @@ local function get_ammo_inventory_for_entity(target)
         return target.get_inventory(defines.inventory.turret_ammo)
     elseif target.prototype.type == 'car' then
         return target.get_inventory(defines.inventory.car_ammo)
+    elseif target.prototype.type == 'artillery-turret' then
+        return target.get_inventory(defines.inventory.artillery_turret_ammo)
+    elseif target.prototype.type == 'artillery-wagon' then
+        return target.get_inventory(defines.inventory.artillery_wagon_ammo)
     else
         return nil
     end
