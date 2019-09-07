@@ -67,12 +67,13 @@ local hotkey_actions = {
     ["hotkey-mine-closest-resouce"] = Mine.mine_closest_resource,
     ["hotkey-mine-selection"] = Mine.mine_selection,
     ["hotkey-mine-tile-under-player"] = Mine.mine_tile_under_player,
+    ["hotkey-refuel-selection"] = Refuel.refuel_selection,
     ["hotkey-refuel-closest"] = Refuel.refuel_closest,
     ["hotkey-refuel-everything"] = Refuel.refuel_everything,
-    ["hotkey-refuel-selection"] = Refuel.refuel_selection,
+    ["hotkey-reload-selection"] = Reload.reload_selection,
     ["hotkey-reload-closest"] = Reload.reload_closest,
     ["hotkey-reload-everything"] = Reload.reload_everything,
-    ["hotkey-reload-selection"] = Reload.reload_selection,
+    ["hotkey-reload-self"] = Reload.reload_self,
 }
 Event.register(Table.keys(hotkey_actions), function(event)
     hotkey_actions[event.input_name](game.players[event.player_index])

@@ -33,6 +33,15 @@ local get_reloadables_to_ammo_categories = Memoize(
             end
         end
 
+        -- guns themselves can also be reloaded, and because they're items, they'll never conflict
+        -- with gun turrets or vehicles, so just go ahead and find them here too
+        for name, prototype in pairs(game.item_prototypes) do
+            if prototype.attack_parameters ~= nil and prototype.attack_parameters.ammo_category
+                ~= nil then
+                prototypes[name] = {prototype.attack_parameters.ammo_category}
+            end
+        end
+
         return prototypes
     end)
 
@@ -51,14 +60,6 @@ local get_ammo_categories_to_ammo_names = Memoize(function()
                 categories[ammo_type.category] = {name}
             end
         end
-    end
-
-    for _, list_of_ammo in pairs(categories) do
-        table.sort(list_of_ammo, function(ammo_name_a, ammo_name_b)
-            local ammo_name_a_score = calc_production_costs_of_items()[ammo_name_a] or 0
-            local ammo_name_b_score = calc_production_costs_of_items()[ammo_name_b] or 0
-            return ammo_name_a_score > ammo_name_b_score
-        end)
     end
 
     return categories
@@ -87,6 +88,8 @@ local get_reloadables_to_ammo_names = Memoize(function()
 
         reloadables[reloadable_name] = list_of_ammo
     end
+
+    Logger.log('Reloadables to ammo names: ' .. serpent.block(reloadables))
 
     return reloadables
 end)
@@ -259,6 +262,21 @@ function M.reload_closest(player)
     end
 end
 
+function M.reload_selection(player)
+    local target = player.selected
+    if target then
+        local error, stack = reload_entity(player, target, 20)
+        if error ~= nil then
+            player.print(error)
+        else
+            player.print("Reloaded hovered " .. q(target.name) .. " with " .. stack.count .. " "
+                             .. q(stack.name))
+        end
+    else
+        player.print("No cursor selection to reload!")
+    end
+end
+
 function M.reload_everything(player)
     local targets = get_all_reachable_reloadable_entities(player)
     local targets_count = #targets
@@ -302,19 +320,101 @@ function M.reload_everything(player)
     end
 end
 
-function M.reload_selection(player)
-    local target = player.selected
-    if target then
-        local error, stack = reload_entity(player, target, 20)
-        if error ~= nil then
-            player.print(error)
-        else
-            player.print("Reloaded hovered " .. q(target.name) .. " with " .. stack.count .. " "
-                             .. q(stack.name))
-        end
-    else
-        player.print("No cursor selection to reload!")
-    end
+function M.reload_self(player)
+    local target = player.character
+    local target_ammo_inventory = target.get_inventory(defines.inventory.character_ammo)
+    local target_guns_inventory = target.get_inventory(defines.inventory.character_guns)
+    local ammo_count = 20
+
+    local reloadables_to_ammo_names = get_reloadables_to_ammo_names()
+
+    local num_gun_slots = #target_guns_inventory
+    for slot_number = 1, num_gun_slots do
+        local current_gun = target_guns_inventory[slot_number]
+        local current_slot_has_gun = current_gun.valid_for_read
+        if current_slot_has_gun then
+            local ammo_names = reloadables_to_ammo_names[current_gun.prototype.name]
+
+            local current_gun_ammo = target_ammo_inventory[slot_number]
+            local current_slot_has_ammo = current_gun_ammo.valid_for_read
+            if current_slot_has_ammo then
+                local ammo_name = current_gun_ammo.prototype.name
+                local ammo_owned_count = player.get_main_inventory().get_item_count(
+                                             current_gun_ammo.prototype.name)
+                if ammo_owned_count > 0 then
+                    if ammo_count > ammo_owned_count then
+                        ammo_count = ammo_owned_count
+                    end
+
+                    local previous_ammo_count = current_gun_ammo.count
+                    current_gun_ammo.count = current_gun_ammo.count + ammo_count
+
+                    local ammo_loaded_count = current_gun_ammo.count - previous_ammo_count
+                    if ammo_loaded_count > 0 then
+                        local used_ammo = {
+                            name = current_gun_ammo.prototype.name,
+                            count = ammo_loaded_count,
+                        }
+                        local removed_count = player.get_main_inventory().remove(used_ammo)
+
+                        if removed_count ~= ammo_loaded_count then
+                            -- despite our earlier checks, we've added more ammo to the target than we had
+                            -- in our inventory, so we've made ammo out of nothing.
+                            -- welp, if this happens there's not much to do other than log it and move on.
+                            local msg =
+                                "WARNING: added " .. ammo_loaded_count .. " " .. q(ammo_name)
+                            msg = msg .. " ammo to " .. q(target.name) .. " but could only remove "
+                            msg = msg .. removed_count .. " from player inventory"
+                            Logger.log(msg)
+                        end
+
+                        player.print('Loaded ' .. q(current_gun.name) .. ' with '
+                                         .. ammo_loaded_count .. ' ' .. q(ammo_name))
+                        Logger.log(
+                            'Loaded player #' .. player.index .. '\'s ' .. q(current_gun.name)
+                                .. ' with ' .. ammo_loaded_count .. ' ' .. q(ammo_name))
+                    end
+                end
+            else
+                -- gun is unloaded, so try all possible types of ammo, based on what player is carrying
+                for _, ammo_name in pairs(ammo_names) do
+                    local ammo_owned_count = player.get_item_count(ammo_name)
+                    if ammo_owned_count > 0 then
+                        if ammo_count > ammo_owned_count then
+                            ammo_count = ammo_owned_count
+                        end
+                        Logger.log("Will try to load " .. q(target.name) .. "'s ammo slot #"
+                                       .. slot_number .. " with " .. ammo_count .. " of "
+                                       .. q(ammo_name))
+
+                        local ammo_stack = {name = ammo_name, count = ammo_count}
+                        if target_ammo_inventory[slot_number].can_set_stack(ammo_stack)
+                            and target_ammo_inventory[slot_number].set_stack(ammo_stack) then
+
+                            local used_ammo = {name = ammo_name, count = ammo_count}
+                            local removed_count = player.get_main_inventory().remove(used_ammo)
+                            if removed_count ~= ammo_count then
+                                -- despite our earlier checks, we've added more ammo to the target than we had
+                                -- in our inventory, so we've made ammo out of nothing.
+                                -- welp, if this happens there's not much to do other than log it and move on.
+                                local msg = "WARNING: added " .. ammo_count .. " " .. q(ammo_name)
+                                msg = msg .. " ammo to " .. q(target.name)
+                                          .. " but could only remove "
+                                msg = msg .. removed_count .. " from player inventory"
+                                Logger.log(msg)
+                            end
+
+                            player.print('Loaded ' .. q(current_gun.name) .. ' with ' .. ammo_count
+                                             .. ' ' .. q(ammo_name))
+                            Logger.log('Loaded player #' .. player.index .. '\'s '
+                                           .. q(current_gun.name) .. ' with ' .. ammo_count .. ' '
+                                           .. q(ammo_name))
+                        end
+                    end
+                end
+            end
+        end -- end if condition to handle loaded and unloaded guns
+    end -- end looping through guns
 end
 
 function M.render_ui(player)

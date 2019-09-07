@@ -217,6 +217,21 @@ function M.refuel_closest(player)
     end
 end
 
+function M.refuel_selection(player)
+    local target = player.selected
+    if target then
+        local error, stack = refuel_entity(player, target, 20)
+        if error ~= nil then
+            player.print(error)
+        else
+            player.print("Refueled hovered " .. q(target.name) .. " with " .. stack.count .. " "
+                             .. q(stack.name))
+        end
+    else
+        player.print("No cursor selection to refuel!")
+    end
+end
+
 function M.refuel_everything(player)
     local targets = get_all_reachable_refuelable_entities(player)
     local targets_count = #targets
@@ -257,21 +272,6 @@ function M.refuel_everything(player)
         end
     else
         player.print("Nothing in reach which can be refueled!")
-    end
-end
-
-function M.refuel_selection(player)
-    local target = player.selected
-    if target then
-        local error, stack = refuel_entity(player, target, 20)
-        if error ~= nil then
-            player.print(error)
-        else
-            player.print("Refueled hovered " .. q(target.name) .. " with " .. stack.count .. " "
-                             .. q(stack.name))
-        end
-    else
-        player.print("No cursor selection to refuel!")
     end
 end
 

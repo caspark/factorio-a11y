@@ -21,18 +21,18 @@ data:extend({
         type = "custom-input",
         name = "hotkey-mine-tile-under-player",
         key_sequence = "SHIFT + ALT + T",
-    }, {type = "custom-input", name = "hotkey-refuel-selection", key_sequence = "SHIFT + ALT + F"},
+    }, {type = "custom-input", name = "hotkey-refuel-closest", key_sequence = "SHIFT + ALT + U"},
+    {type = "custom-input", name = "hotkey-refuel-selection", key_sequence = "SHIFT + ALT + F"},
     {type = "custom-input", name = "hotkey-refuel-everything", key_sequence = "CONTROL + SHIFT + D"},
-    {type = "custom-input", name = "hotkey-refuel-closest", key_sequence = "SHIFT + ALT + U"},
-    {type = "custom-input", name = "hotkey-reload-selection", key_sequence = "CONTROL + SHIFT + R"},
-    {
-        type = "custom-input",
-        name = "hotkey-reload-everything",
-        key_sequence = "CONTROL + SHIFT + ALT + E",
-    },
     {
         type = "custom-input",
         name = "hotkey-reload-closest",
         key_sequence = "CONTROL + SHIFT + ALT + L",
     },
+    {type = "custom-input", name = "hotkey-reload-selection", key_sequence = "CONTROL + SHIFT + R"},
+    {
+        type = "custom-input",
+        name = "hotkey-reload-everything",
+        key_sequence = "CONTROL + SHIFT + ALT + E",
+    }, {type = "custom-input", name = "hotkey-reload-self", key_sequence = "CONTROL + SHIFT + L"},
 })

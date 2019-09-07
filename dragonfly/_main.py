@@ -227,16 +227,17 @@ class FactorioRule(dragonfly.MappingRule):
             # ally commands bound to hotkeys
             "explain it": dragonfly.Key("as-w"),
             "run there": FACTORIO_STOP_WALKING_ACTION + dragonfly.Key("as-r") + FACTORIO_UI_DELAY_ACTION + dragonfly.Mouse("left"),
-            "mine ore": dragonfly.Key("as-e"),
             "mine house": dragonfly.Key("as-b"),
+            "mine ore": dragonfly.Key("as-e"),
             "mine it": dragonfly.Key("as-m"),
             "mine tile": dragonfly.Key("as-t"),
+            "refuel here": dragonfly.Key("as-u"),
             "refuel it": dragonfly.Key("as-f"),
             "refuel everything": dragonfly.Key("cs-d"),
-            "refuel here": dragonfly.Key("as-u"),
+            "reload here": dragonfly.Key("csa-l"),
             "reload it": dragonfly.Key("cs-r"),
             "reload everything": dragonfly.Key("csa-e"),
-            "reload here": dragonfly.Key("csa-l"),
+            "reload self": dragonfly.Key("cs-l"),
 
             # mouse shortcuts
             "paste": dragonfly.Key("shift:down") + dragonfly.Mouse("left") + dragonfly.Key("shift:up"),

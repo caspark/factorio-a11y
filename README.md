@@ -107,8 +107,8 @@ Basically you should say `data reload` anytime after unloading & reloading your 
 
 ### Mining
 
-* `mine ore` will mine the closest resource in reach which the player can mine (ore, tree or rock)
 * `mine house` will mine the closest building in reach
+* `mine ore` will mine the closest resource in reach which the player can mine (ore, tree or rock)
 * `mine it` will mine the item being hovered as long as it is in reach (building, resource, vehicle, etc)
 * `mine tile` will mine the tile being stood on (bricks, concrete, etc)
 
@@ -145,16 +145,30 @@ NB: for convenience, if you're holding a ghost of an item and your inventory gai
 
 ### Fueling
 
-* `refuel here` will refuel the closest refuelable entity
-* `refuel it` will refuel the entity being hovered over (building, vehicle, etc)
-* `refuel everything` will refuel
+You can add fuel (wood, coal, etc) into buildings (burner miners, burner inserters, stone furnaces, etc) and vehicles (cars, tanks, trains):
+
+* `refuel here` will refuel the closest refuelable entity in reach
+* `refuel it` will refuel the entity being hovered over (building, vehicle, etc) as long as it is in reach
+* `refuel everything` will refuel everything that is reachable
 
 Tips:
 
-* Refueling works with buildings (burner miners, burner inserters, stone furnaces, etc) and vehicles (cars, tanks, trains).
-* The highest energy value fuel is used first (coal before wood, for example).
-* The correct fuel for each entity is calculated dynamically, not hardcoded, so this should work with mods.
+* The highest energy value fuel is used first (e.g. coal before wood).
+* Acceptable fuel for each entity is calculated dynamically, not hardcoded, so this should work with mods.
 
+### Reloading
+
+You can load ammo into turrets (gun and artillery turrets) and vehicles (cars and tanks), as well as into your character's guns:
+
+* `reload here` will reload the closest entity that takes ammo and is in reach
+* `reload it` will reload the entity being hovered over (building, vehicle)
+* `reload everything` will reload every entity that is reachable (not including the character's guns)
+* `reload self` will put ammo into your character's guns
+
+Tips:
+
+* The most expensive ammunition is used first (e.g. piercing bullets before regular bullets).
+* Acceptable ammo for each entity is calculated dynamically, not hardcoded, so this should work with mods.
 
 Todo list
 ---------
