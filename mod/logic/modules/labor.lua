@@ -39,12 +39,22 @@ local M = {}
 local function on_labor_target_reached(player)
     local current_target = Game.get_or_set_data("labor", player.index, "current_target", false, nil)
 
-    local item_name = current_target.ghost_name
-    -- TODO this explodes when trying to build rails (e.g. straight rail != rail item name that builds it)
-    -- TODO this refuses to build when player has that item in their cursor stack but not in inventory
-    local item_count = player.character.get_main_inventory().get_item_count(item_name)
-    if item_count < 1 then
-        player.print('Can\'t build ' .. q(current_target.ghost_name) .. ' - don\'t have any!')
+    local ghost_prototype = current_target.ghost_prototype
+    local items_to_use = nil
+    for _, possible_stack in pairs(ghost_prototype.items_to_place_this) do
+        -- TODO this refuses to build when player has that item in their cursor stack but not in inventory
+        local item_count = player.character.get_main_inventory().get_item_count(possible_stack.name)
+        if item_count > possible_stack.count then
+            items_to_use = possible_stack
+        end
+    end
+    if items_to_use == nil then
+        local possibilities = {}
+        for _, possible_stack in pairs(ghost_prototype.items_to_place_this) do
+            table.insert(possibilities, possible_stack.count .. ' ' .. q(possible_stack.name))
+        end
+        player.print('Can\'t build ' .. q(current_target.ghost_name) .. ' - need '
+                         .. (' or '):join(possibilities))
     else
         local collisions = current_target.revive()
         -- TODO need to handle collisions with player here (run to a free point further away - test with chemistry and rocket silo buildings)
@@ -53,9 +63,8 @@ local function on_labor_target_reached(player)
                              .. serpent.block(collisions))
             stop_laboring(player)
         else
-            local removed_count = player.character.get_main_inventory().remove(
-                                      {name = item_name, count = 1})
-            player.print('removed ' .. removed_count)
+            local removed_count = player.character.get_main_inventory().remove(items_to_use)
+            Logger.log('Labor: removed ' .. removed_count .. ' of ' .. q(items_to_use.name))
             -- we successfully revived the entity, i.e. built the thing we were trying to build
             stop_laboring(player) -- to reset laboring state
             M.labor(player) -- find the next thing to labor
@@ -73,6 +82,7 @@ function M.labor(player)
 
     if target then
         Game.get_or_set_data("labor", player.index, "current_target", true, target)
+        -- TODO factor in size of the building in the max build distance (should be able to calc an oval)
         Run.run_to_target(player, target, max_build_distance)
     end
 end
