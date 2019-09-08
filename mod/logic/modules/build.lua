@@ -8,14 +8,17 @@ local Table = require("__stdlib__/stdlib/utils/table")
 
 -- TODO document this entire module's behavior in the readme
 
--- TODO need to actually call this
-local function clear_build_history(player)
-    player.print('clearing build history')
-    Game.get_or_set_data("build", player.index, "last_build", true, nil)
+local function reset_build_history(player, build_history)
+    local guide_handles = Game.get_or_set_data("build", player.index, "guide_ui_handles", false, {})
+    for _, handle in pairs(guide_handles) do
+        rendering.destroy(handle)
+    end
+
+    Game.get_or_set_data("build", player.index, "last_build", true, build_history)
 end
 
 local function draw_block(player, color, area)
-    rendering.draw_rectangle({
+    return rendering.draw_rectangle({
         color = color,
         width = 2,
         filled = false,
@@ -28,17 +31,18 @@ local function draw_block(player, color, area)
     })
 end
 
-local function extend_build(player, building_item, building_position, building_direction)
-    local build_history = Game.get_or_set_data("build", player.index, "last_build", false, nil)
+local function calc_entity_width_and_height(entity_prototype_name)
+    local building_prototype = game.entity_prototypes[entity_prototype_name]
+    local width = building_prototype.selection_box.right_bottom.x
+                      - building_prototype.selection_box.left_top.x
+    local height = building_prototype.selection_box.right_bottom.y
+                       - building_prototype.selection_box.left_top.y
+    return width, height
+end
 
+local function render_guide_ui(player, building_item, building_position, building_direction)
+    -- update new guide UI
     local building_prototype = game.entity_prototypes[building_item]
-
-    player.print("extendbuild: " .. building_position.x .. ',' .. building_position.y .. ' dir='
-                     .. building_direction .. " item: " .. q(building_item) .. " prototype type: "
-                     .. building_prototype.type)
-
-    local surface = player.surface
-
     local building_box = Area.construct(building_position.x
                                             + building_prototype.selection_box.left_top.x,
                                         building_position.y
@@ -47,20 +51,16 @@ local function extend_build(player, building_item, building_position, building_d
                                             + building_prototype.selection_box.right_bottom.x,
                                         building_position.y
                                             + building_prototype.selection_box.right_bottom.y)
-    local width = building_prototype.selection_box.right_bottom.x
-                      - building_prototype.selection_box.left_top.x
-    local height = building_prototype.selection_box.right_bottom.y
-                       - building_prototype.selection_box.left_top.y
-
-    -- TODO it's probably more helpful to always show the guide on every build? (but only complete builds on shift-click)
+    local width, height = calc_entity_width_and_height(building_item)
     local guide_dirs = {{width, 0}, {-width, 0}, {0, height}, {0, -height}}
+    local guide_handles = {}
     for _, direction in pairs(guide_dirs) do
         -- TODO display a longer guide for smaller items, like belts?
         for i = 1, 10 do
             local offset = Position.multiply(direction, {i, i})
             local new_pos = Position.add(offset, building_position)
             local new_area = Area.offset(building_box, offset)
-            if surface.can_place_entity{
+            if player.surface.can_place_entity{
                 name = building_item,
                 position = new_pos,
                 direction = building_direction,
@@ -68,14 +68,36 @@ local function extend_build(player, building_item, building_position, building_d
                 build_check_type = defines.build_check_type.ghost_place,
                 forced = true,
             } then
-                draw_block(player, defines.color.yellow, new_area)
+                table.insert(guide_handles, draw_block(player, defines.color.yellow, new_area))
             else
                 break
             end
         end
     end
+    return guide_handles
+end
 
-    if build_history ~= nil and build_history.position.x == building_position.x
+local function extend_build(player, building_item, building_position, building_direction,
+                            shift_build)
+    local building_prototype = game.entity_prototypes[building_item]
+    local width = building_prototype.selection_box.right_bottom.x
+                      - building_prototype.selection_box.left_top.x
+    local height = building_prototype.selection_box.right_bottom.y
+                       - building_prototype.selection_box.left_top.y
+
+    local build_history = Game.get_or_set_data("build", player.index, "last_build", false, nil)
+
+    reset_build_history(player, {
+        item = building_item,
+        position = building_position,
+        direction = building_direction,
+    })
+
+    local guide_handles = render_guide_ui(player, building_item, building_position,
+                                          building_direction)
+    Game.get_or_set_data("build", player.index, "guide_ui_handles", true, guide_handles)
+
+    if shift_build and build_history ~= nil and build_history.position.x == building_position.x
         or build_history.position.y == building_position.y then
 
         local offset = Position.subtract(building_position, build_history.position)
@@ -95,7 +117,7 @@ local function extend_build(player, building_item, building_position, building_d
                                                    Position.multiply(increment, {i, i}),
                                                    {width, height}))
 
-                can_build_all = can_build_all and surface.can_place_entity{
+                can_build_all = can_build_all and player.surface.can_place_entity{
                     name = building_item,
                     position = check_pos,
                     direction = building_direction,
@@ -113,10 +135,10 @@ local function extend_build(player, building_item, building_position, building_d
                                                        Position.multiply(increment, {i, i}),
                                                        {width, height}))
 
-                    local check_box = Area.new(building_prototype.selection_box)
-                    check_box = Area.offset(check_box, check_pos)
-                    draw_block(player, defines.color.green, check_box)
-                    surface.create_entity{
+                    -- local check_box = Area.new(building_prototype.selection_box)
+                    -- check_box = Area.offset(check_box, check_pos)
+                    -- draw_block(player, defines.color.green, check_box)
+                    player.surface.create_entity{
                         name = 'entity-ghost',
                         position = check_pos,
                         direction = build_history.direction,
@@ -131,12 +153,6 @@ local function extend_build(player, building_item, building_position, building_d
             end
         end
     end
-
-    Game.get_or_set_data("build", player.index, "last_build", true, {
-        item = building_item,
-        position = building_position,
-        direction = building_direction,
-    })
 end
 
 local M = {}
@@ -145,9 +161,8 @@ function M.register_event_handlers()
     Event.register(defines.events.on_put_item, function(event)
         local player = game.players[event.player_index]
 
-        if event.shift_build then
-            extend_build(player, player.cursor_stack.name, event.position, event.direction)
-        end
+        extend_build(player, player.cursor_stack.name, event.position, event.direction,
+                     event.shift_build)
     end)
 
     Event.register(defines.events.on_player_cursor_stack_changed, function(event)
