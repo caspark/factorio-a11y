@@ -7,6 +7,7 @@ local Memoize = require("__stdlib__/stdlib/vendor/memoize")
 local Position = require("__stdlib__/stdlib/area/position")
 local Table = require("__stdlib__/stdlib/utils/table")
 local Run = require("__A11y__/logic/modules/run")
+local Sizer = require("__A11y__/logic/utils/sizer")
 
 local calc_production_costs_of_items = Memoize(production_score.generate_price_list)
 
@@ -115,8 +116,8 @@ end
 
 function M.labor(player)
     -- have an artificially lower build distance to make the player run around more
-    -- otherwise laboring would be better than construction bots
-    local max_build_distance = player.resource_reach_distance
+    -- otherwise laboring would be way better than construction bots
+    local max_build_distance = player.resource_reach_distance / 2
 
     local new_targets = find_reachable_ghosts(player)
 
@@ -141,8 +142,9 @@ function M.labor(player)
 
     local first_target = new_targets[1]
     if first_target then
-        -- TODO factor in size of the building in the max build distance (should be able to calc an oval)
-        Run.run_to_target(player, new_targets[1], max_build_distance)
+        local width, height = Sizer.calc_entity_width_and_height(first_target.ghost_name)
+        local offset = math.max(width, height)
+        Run.run_to_target(player, new_targets[1], offset + max_build_distance)
     end
 end
 

@@ -5,6 +5,7 @@ local Game = require("__stdlib__/stdlib/game")
 local Memoize = require("__stdlib__/stdlib/vendor/memoize")
 local Position = require("__stdlib__/stdlib/area/position")
 local Table = require("__stdlib__/stdlib/utils/table")
+local Sizer = require("__A11y__/logic/utils/sizer")
 
 local function reset_build_history(player, build_history)
     local guide_handles = Game.get_or_set_data("build", player.index, "guide_ui_handles", false, {})
@@ -29,15 +30,6 @@ local function draw_block(player, color, area)
     })
 end
 
-local function calc_entity_width_and_height(entity_prototype_name)
-    local building_prototype = game.entity_prototypes[entity_prototype_name]
-    local width = math.ceil(building_prototype.selection_box.right_bottom.x
-                                - building_prototype.selection_box.left_top.x)
-    local height = math.ceil(building_prototype.selection_box.right_bottom.y
-                                 - building_prototype.selection_box.left_top.y)
-    return width, height
-end
-
 local function render_guide_ui(player, building_item, building_position, building_direction)
     local max_guide_length_in_tiles = 50 -- how long in tiles should the guide extend to either side?
 
@@ -50,7 +42,7 @@ local function render_guide_ui(player, building_item, building_position, buildin
                                             + building_prototype.selection_box.right_bottom.x,
                                         building_position.y
                                             + building_prototype.selection_box.right_bottom.y)
-    local width, height = calc_entity_width_and_height(building_item)
+    local width, height = Sizer.calc_entity_width_and_height(building_item)
     local guide_dirs = {{width, 0}, {-width, 0}, {0, height}, {0, -height}}
     local guide_handles = {}
     local max_guide_width = math.floor(max_guide_length_in_tiles / width)
@@ -80,7 +72,7 @@ end
 
 local function extend_build(player, building_item, building_position, building_direction,
                             shift_build)
-    local width, height = calc_entity_width_and_height(building_item)
+    local width, height = Sizer.calc_entity_width_and_height(building_item)
     local build_history = Game.get_or_set_data("build", player.index, "last_build", false, nil)
 
     reset_build_history(player, {
