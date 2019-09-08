@@ -118,6 +118,7 @@ local function extend_build(player, building_item, building_position, building_d
                     check_box = Area.offset(check_box, check_pos)
                     draw_block(player, defines.color.green, check_box)
                     -- TODO how does this behave when the player has 2 items and we need 3 to fill the gap?
+                    -- TODO this is limited by player's reach (but that may be fixed when moving to ghosts?)
                     if player.can_build_from_cursor{
                         position = check_pos,
                         direction = building_direction,
@@ -127,6 +128,9 @@ local function extend_build(player, building_item, building_position, building_d
                             position = check_pos,
                             direction = building_direction,
                         }
+                    else
+                        -- TODO display some hover text here about something being in the way (or running out of items)
+                        break
                     end
                 end
             end
