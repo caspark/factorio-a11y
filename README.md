@@ -22,11 +22,13 @@ Currently the mod is done enough to use for the early (pre combat) game, with ne
     - [Data syncing](#data-syncing)
     - [Utility](#utility)
     - [Movement](#movement)
-    - [Mining](#mining)
+    - [Mining resources](#mining-resources)
+    - [Building buildings](#building-buildings)
     - [Crafting](#crafting)
     - [Manipulating entities](#manipulating-entities)
     - [Inventory management](#inventory-management)
     - [Fueling](#fueling)
+    - [Reloading](#reloading)
   - [Todo list](#todo-list)
     - [Investigate](#investigate)
     - [QoL and papercuts](#qol-and-papercuts)
@@ -105,12 +107,15 @@ Basically you should say `data reload` anytime after unloading & reloading your 
   * `direction` is any 1-2 of `north`, `south`, `east`, `west`
 * `stop` will stop your character from running in a direction indefinitely.
 
-### Mining
+### Mining resources
 
-* `mine house` will mine the closest building in reach
-* `mine ore` will mine the closest resource in reach which the player can mine (ore, tree or rock)
-* `mine it` will mine the item being hovered as long as it is in reach (building, resource, vehicle, etc)
-* `mine tile` will mine the tile being stood on (bricks, concrete, etc)
+* `mine here` will mine the closest resource in reach which the player can mine (ore, tree or rock)
+
+### Building buildings
+
+* `raze here` will mine the closest building in reach
+* `raze it` will mine the item being hovered as long as it is in reach (building, resource, vehicle, etc)
+* `detile here` will mine the tile being stood on (bricks, concrete, etc)
 
 ### Crafting
 
