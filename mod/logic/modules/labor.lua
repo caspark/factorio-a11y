@@ -12,7 +12,14 @@ local calc_production_costs_of_items = Memoize(production_score.generate_price_l
 
 -- if the player is engaged in labor, abort that
 local function stop_laboring(player)
-    Game.get_or_set_data("labor", player.index, "current_target", true, nil)
+    Game.get_or_set_data("labor", player.index, "current_targets", true, nil)
+end
+
+local function pop_current_target(player)
+    local current_targets = Game.get_or_set_data("labor", player.index, "current_targets", false,
+                                                 nil)
+    table.remove(current_targets, 1)
+    Game.get_or_set_data("labor", player.index, "current_targets", true, current_targets)
 end
 
 local function calc_cheapest_available_item_for_ghost(player, ghost_prototype)
@@ -20,7 +27,7 @@ local function calc_cheapest_available_item_for_ghost(player, ghost_prototype)
     for _, possible_stack in pairs(ghost_prototype.items_to_place_this) do
         -- TODO this refuses to build when player has that item in their cursor stack but not in inventory
         local item_count = player.character.get_main_inventory().get_item_count(possible_stack.name)
-        if item_count > possible_stack.count then
+        if item_count >= possible_stack.count then
             table.insert(possibilities, possible_stack)
         end
     end
@@ -74,7 +81,10 @@ end
 local M = {}
 
 local function on_labor_target_reached(player)
-    local current_target = Game.get_or_set_data("labor", player.index, "current_target", false, nil)
+    local current_targets = Game.get_or_set_data("labor", player.index, "current_targets", false,
+                                                 nil)
+    local current_target = current_targets[1]
+    Game.get_or_set_data("labor", player.index, "current_targets", true, current_targets)
 
     local ghost_prototype = current_target.ghost_prototype
     local items_to_use = calc_cheapest_available_item_for_ghost(player,
@@ -92,12 +102,12 @@ local function on_labor_target_reached(player)
         if collisions == nil or #collisions > 0 then
             player.print('Failed to build ghost due to colliding entities: '
                              .. serpent.block(collisions))
-            stop_laboring(player)
+            stop_laboring(player) -- abort entirely
         else
             local removed_count = player.character.get_main_inventory().remove(items_to_use)
             Logger.log('Labor: removed ' .. removed_count .. ' of ' .. q(items_to_use.name))
             -- we successfully revived the entity, i.e. built the thing we were trying to build
-            stop_laboring(player) -- to reset laboring state
+            pop_current_target(player) -- done with the current thing
             M.labor(player) -- find the next thing to labor
         end
     end
@@ -108,13 +118,31 @@ function M.labor(player)
     -- otherwise laboring would be better than construction bots
     local max_build_distance = player.resource_reach_distance
 
-    local targets = find_reachable_ghosts(player)
+    local new_targets = find_reachable_ghosts(player)
 
-    if targets then
-        -- TODO we should capture all ghosts in range and continually append to the list (to handle starting in the middle of a line of belts)
-        Game.get_or_set_data("labor", player.index, "current_target", true, targets[1])
+    local existing_targets = Game.get_or_set_data("labor", player.index, "current_targets", false,
+                                                  {})
+
+    local has_available_items = Memoize(function(ghost_prototype)
+        return calc_cheapest_available_item_for_ghost(player, ghost_prototype) ~= nil
+    end)
+    for _, target in pairs(existing_targets) do
+        if target.valid and has_available_items(target.ghost_prototype) then
+            table.insert(new_targets, target)
+        end
+    end
+    local dist = Memoize(function(entity)
+        return Position.distance_squared(player.position, entity.position)
+    end)
+    table.sort(new_targets, function(a, b)
+        return dist(a) < dist(b)
+    end)
+    Game.get_or_set_data("labor", player.index, "current_targets", true, new_targets)
+
+    local first_target = new_targets[1]
+    if first_target then
         -- TODO factor in size of the building in the max build distance (should be able to calc an oval)
-        Run.run_to_target(player, targets[1], max_build_distance)
+        Run.run_to_target(player, new_targets[1], max_build_distance)
     end
 end
 
@@ -136,7 +164,8 @@ function M.render_ui(player)
     end
 
     local available_ghosts, unavailable_ghosts = find_reachable_ghosts(player)
-    local current_target = Game.get_or_set_data("labor", player.index, "current_target", false, nil)
+    local current_targets = Game.get_or_set_data("labor", player.index, "current_targets", false,
+                                                 nil)
 
     -- get a reference to the grid table, remove any existing drawings, then save new drawings in it
     local ui_ids = Game.get_or_set_data("labor", player.index, "ui_ids", false, {})
@@ -172,33 +201,52 @@ function M.render_ui(player)
         }
     end
 
-    if current_target and current_target.valid then
-        ui_ids[#ui_ids + 1] = rendering.draw_line{
-            color = defines.color.white,
-            width = 1,
-            gap_length = 0.2,
-            dash_length = 0.2,
-            -- from should be the stationary thing so that the dashes don't appear to move on the line
-            from = current_target,
-            to = player.character,
-            surface = player.surface,
-            time_to_live = 60 * 60,
-            players = {player.index},
-            draw_on_ground = true,
-        }
+    if current_targets then
+        for i, current_target in pairs(current_targets) do
+            if current_target.valid then
+                if i == 1 then
+                    ui_ids[#ui_ids + 1] = rendering.draw_line{
+                        color = defines.color.white,
+                        width = 1,
+                        gap_length = 0.2,
+                        dash_length = 0.2,
+                        -- from should be the stationary thing so that the dashes don't appear to move on the line
+                        from = current_target,
+                        to = player.character,
+                        surface = player.surface,
+                        time_to_live = 60 * 60,
+                        players = {player.index},
+                        draw_on_ground = true,
+                    }
+                end
+
+                ui_ids[#ui_ids + 1] = rendering.draw_circle{
+                    color = defines.color.white,
+                    radius = 0.5,
+                    width = 2,
+                    filled = false,
+                    target = current_target,
+                    surface = player.surface,
+                    time_to_live = 60 * 60,
+                    players = {player.index},
+                    draw_on_ground = true,
+                }
+            end
+        end
     end
+
 end
 
 function M.register_event_handlers()
     Event.register(Event.generate_event_name(Run.events.run_completed), function(event)
         local player = game.players[event.player_index]
 
-        local current_target = Game.get_or_set_data("labor", player.index, "current_target", false,
-                                                    nil)
-        if current_target ~= nil then
-            if not current_target.valid then
+        local current_targets = Game.get_or_set_data("labor", player.index, "current_targets",
+                                                     false, nil)
+        if current_targets ~= nil then
+            if not current_targets[1].valid then
                 stop_laboring(player)
-            elseif current_target == event.target_entity then
+            elseif current_targets[1] == event.target_entity then
                 on_labor_target_reached(player)
             end
         end
