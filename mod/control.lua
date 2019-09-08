@@ -3,6 +3,7 @@ local Event = require("__stdlib__/stdlib/event/event")
 local Table = require("__stdlib__/stdlib/utils/table")
 
 -- our lua
+local Build = require("__A11y__/logic/modules/build")
 local Commands = require("__A11y__/logic/modules/commands")
 local Craft = require("__A11y__/logic/modules/craft")
 local Dump = require("__A11y__/logic/modules/dump")
@@ -46,6 +47,7 @@ end)
 -- ============== Event handlers ==============
 -- Register all event handlers in one place to keep control flow clear.
 
+Build.register_event_handlers()
 Inventory.register_event_handlers()
 Mine.register_event_handlers()
 Refuel.register_event_handlers()
