@@ -119,7 +119,12 @@ local function on_labor_target_reached(player)
                 1, -- precision for search (step size)
                 true -- force_to_tile_center
                 )
-            Run.run_to_target(player, target_pos, 0)
+            if target_pos == nil then
+                player.print('Laboring stopped: no nearby empty tile to build from')
+                stop_laboring(player)
+            else
+                Run.run_to_target(player, target_pos, 0)
+            end
         else
             local removed_count = player.character.get_main_inventory().remove(items_to_use)
             Logger.log('Labor: removed ' .. removed_count .. ' of ' .. q(items_to_use.name))

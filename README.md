@@ -118,6 +118,19 @@ Basically you should say `data reload` anytime after unloading & reloading your 
 * `raze it` will mine the item being hovered as long as it is in reach (building, resource, vehicle, etc)
 * `detile here` will mine the tile being stood on (bricks, concrete, etc)
 
+#### Laboring
+
+A11y can build ghosts for you thanks to your character's newfound willingness to do **hard backbreaking labor**:
+
+* `labor here` will start your character laboring if there are any ghosts in reach: your character will run to each ghost in turn and build it using an item from your inventory.
+
+Tips:
+
+* Issue a run command to stop the laboring (or manually walk in any direction).
+* Ghosts queued for laboring will have a white circle overlaid.
+* Ghosts you don't have the right items for will have a brown circle overlaid.
+* If you run out of items necessary to build any ghosts, laboring will stop.
+
 #### Line building
 
 Building lines of immediately adjacent buildings (e.g. transport belt lines or rows of assembly machines) is very common so A11y augments building to improve this:
