@@ -6,8 +6,6 @@ local Memoize = require("__stdlib__/stdlib/vendor/memoize")
 local Position = require("__stdlib__/stdlib/area/position")
 local Table = require("__stdlib__/stdlib/utils/table")
 
--- TODO document this entire module's behavior in the readme
-
 local function reset_build_history(player, build_history)
     local guide_handles = Game.get_or_set_data("build", player.index, "guide_ui_handles", false, {})
     for _, handle in pairs(guide_handles) do

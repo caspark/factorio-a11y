@@ -24,6 +24,7 @@ Currently the mod is done enough to use for the early (pre combat) game, with ne
     - [Movement](#movement)
     - [Mining resources](#mining-resources)
     - [Building buildings](#building-buildings)
+      - [Line building](#line-building)
     - [Crafting](#crafting)
     - [Manipulating entities](#manipulating-entities)
     - [Inventory management](#inventory-management)
@@ -117,6 +118,13 @@ Basically you should say `data reload` anytime after unloading & reloading your 
 * `raze it` will mine the item being hovered as long as it is in reach (building, resource, vehicle, etc)
 * `detile here` will mine the tile being stood on (bricks, concrete, etc)
 
+#### Line building
+
+Building lines of immediately adjacent buildings (e.g. transport belt lines or rows of assembly machines) is very common so A11y augments building to improve this:
+
+* When you build anything, you'll see a cross-guide showing where adjancent buildings can fit, to help you line up buildings in a line
+* Normally shift-clicking will place a ghost of the item you're holding, but with A11y, if you shift click on the cross-guide (while holding a building that's lined up with the guide), you'll place a row of ghosts of those buildings.
+
 ### Crafting
 
 * `craft <count> it` will craft the item being held or hovered over `<count>` times.
@@ -192,7 +200,6 @@ Todo list
 ### New Features
 
 * Have a way to mine everything in range quickly (for clearing trees)
-* Have a way to lay belt (assuming belt is in hand) from first to last click (assuming it's in a row). Maybe show a cross of visual lines as a guide to help line up tiles? Will probably need to check that each tile can be built before starting, and if we fail to build anything then stop building and print an error. Similar to https://mods.factorio.com/mod/replicating-belts
 * Repairing items, using repair packs (ideally it should take some time to repair something, like in the base game)
 * Allow aliasing virtual items when crafting or grabbing? E.g. "craft/grab electric"
 
