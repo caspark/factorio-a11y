@@ -34,20 +34,41 @@ local function get_closest_reachable_ghost(player)
     return closest_ghost
 end
 
+local M = {}
+
 local function on_labor_target_reached(player)
     local current_target = Game.get_or_set_data("labor", player.index, "current_target", false, nil)
 
-    -- TODO build the ghost that is the current target
-    player.print('run completed ' .. serpent.block(current_target))
+    local item_name = current_target.ghost_name
+    -- TODO this explodes when trying to build rails (e.g. straight rail != rail item name that builds it)
+    -- TODO this refuses to build when player has that item in their cursor stack but not in inventory
+    local item_count = player.character.get_main_inventory().get_item_count(item_name)
+    if item_count < 1 then
+        player.print('Can\'t build ' .. q(current_target.ghost_name) .. ' - don\'t have any!')
+    else
+        local collisions = current_target.revive()
+        -- TODO need to handle collisions with player here (run to a free point further away - test with chemistry and rocket silo buildings)
+        if collisions == nil or #collisions > 0 then
+            player.print('Failed to build ghost due to colliding entities: '
+                             .. serpent.block(collisions))
+            stop_laboring(player)
+        else
+            local removed_count = player.character.get_main_inventory().remove(
+                                      {name = item_name, count = 1})
+            player.print('removed ' .. removed_count)
+            -- we successfully revived the entity, i.e. built the thing we were trying to build
+            stop_laboring(player) -- to reset laboring state
+            M.labor(player) -- find the next thing to labor
+        end
+    end
 end
-
-local M = {}
 
 function M.labor(player)
     -- have an artificially lower build distance to make the player run around more
     -- otherwise laboring would be better than construction bots
     local max_build_distance = player.resource_reach_distance
 
+    -- TODO we should capture all ghosts in range and continually append to the list (to handle starting in the middle of a line of belts)
     local target = get_closest_reachable_ghost(player)
 
     if target then
@@ -97,7 +118,7 @@ function M.render_ui(player)
         }
     end
 
-    if current_target then
+    if current_target and current_target.valid then
         ui_ids[#ui_ids + 1] = rendering.draw_line{
             color = defines.color.white,
             width = 1,
@@ -120,8 +141,12 @@ function M.register_event_handlers()
 
         local current_target = Game.get_or_set_data("labor", player.index, "current_target", false,
                                                     nil)
-        if current_target ~= nil and current_target == event.target_entity then
-            on_labor_target_reached(player)
+        if current_target ~= nil then
+            if not current_target.valid then
+                stop_laboring(player)
+            elseif current_target == event.target_entity then
+                on_labor_target_reached(player)
+            end
         end
     end)
 
