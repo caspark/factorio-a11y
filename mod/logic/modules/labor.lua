@@ -1,4 +1,5 @@
 require('__stdlib__/stdlib/utils/defines/color')
+local production_score = require('production-score') -- vanilla module, used for production_score.generate_price_list()
 local Area = require("__stdlib__/stdlib/area/area")
 local Event = require("__stdlib__/stdlib/event/event")
 local Game = require("__stdlib__/stdlib/game")
@@ -7,12 +8,33 @@ local Position = require("__stdlib__/stdlib/area/position")
 local Table = require("__stdlib__/stdlib/utils/table")
 local Run = require("__A11y__/logic/modules/run")
 
+local calc_production_costs_of_items = Memoize(production_score.generate_price_list)
+
 -- if the player is engaged in labor, abort that
 local function stop_laboring(player)
     Game.get_or_set_data("labor", player.index, "current_target", true, nil)
 end
 
-local function get_closest_reachable_ghost(player)
+local function calc_cheapest_available_item_for_ghost(player, ghost_prototype)
+    local possibilities = {}
+    for _, possible_stack in pairs(ghost_prototype.items_to_place_this) do
+        -- TODO this refuses to build when player has that item in their cursor stack but not in inventory
+        local item_count = player.character.get_main_inventory().get_item_count(possible_stack.name)
+        if item_count > possible_stack.count then
+            table.insert(possibilities, possible_stack)
+        end
+    end
+
+    table.sort(possibilities, function(item_a, item_b)
+        local item_a_score = calc_production_costs_of_items()[item_a] or 0
+        local item_b_score = calc_production_costs_of_items()[item_b] or 0
+        return item_a_score < item_b_score
+    end)
+
+    return possibilities[1]
+end
+
+local function find_reachable_ghosts(player)
     local ghost_entities = player.surface.find_entities_filtered{
         position = player.position,
         radius = player.reach_distance,
@@ -20,18 +42,33 @@ local function get_closest_reachable_ghost(player)
         force = player.force,
     }
 
-    local closest_ghost = nil
-    local closest_dist = math.huge
+    local results = {}
     if ghost_entities then
-        for _, res in pairs(ghost_entities) do
-            local d = Position.distance_squared(player.position, res.position)
-            if d < closest_dist then
-                closest_dist = d
-                closest_ghost = res
-            end
+        for _, ghost_entity in pairs(ghost_entities) do
+            table.insert(results, {
+                ghost_entity = ghost_entity,
+                dist = Position.distance_squared(player.position, ghost_entity.position),
+            })
         end
     end
-    return closest_ghost
+    table.sort(results, function(a, b)
+        return a.dist < b.dist
+    end)
+
+    local available_ghosts = {}
+    local unavailable_ghosts = {}
+    local has_available_items = Memoize(function(ghost_prototype)
+        return calc_cheapest_available_item_for_ghost(player, ghost_prototype) ~= nil
+    end)
+    for _, result in pairs(results) do
+        if has_available_items(result.ghost_entity.ghost_prototype) then
+            table.insert(available_ghosts, result.ghost_entity)
+        else
+            table.insert(unavailable_ghosts, result.ghost_entity)
+        end
+    end
+
+    return available_ghosts, unavailable_ghosts
 end
 
 local M = {}
@@ -40,14 +77,8 @@ local function on_labor_target_reached(player)
     local current_target = Game.get_or_set_data("labor", player.index, "current_target", false, nil)
 
     local ghost_prototype = current_target.ghost_prototype
-    local items_to_use = nil
-    for _, possible_stack in pairs(ghost_prototype.items_to_place_this) do
-        -- TODO this refuses to build when player has that item in their cursor stack but not in inventory
-        local item_count = player.character.get_main_inventory().get_item_count(possible_stack.name)
-        if item_count > possible_stack.count then
-            items_to_use = possible_stack
-        end
-    end
+    local items_to_use = calc_cheapest_available_item_for_ghost(player,
+                                                                current_target.ghost_prototype)
     if items_to_use == nil then
         local possibilities = {}
         for _, possible_stack in pairs(ghost_prototype.items_to_place_this) do
@@ -77,13 +108,13 @@ function M.labor(player)
     -- otherwise laboring would be better than construction bots
     local max_build_distance = player.resource_reach_distance
 
-    -- TODO we should capture all ghosts in range and continually append to the list (to handle starting in the middle of a line of belts)
-    local target = get_closest_reachable_ghost(player)
+    local targets = find_reachable_ghosts(player)
 
-    if target then
-        Game.get_or_set_data("labor", player.index, "current_target", true, target)
+    if targets then
+        -- TODO we should capture all ghosts in range and continually append to the list (to handle starting in the middle of a line of belts)
+        Game.get_or_set_data("labor", player.index, "current_target", true, targets[1])
         -- TODO factor in size of the building in the max build distance (should be able to calc an oval)
-        Run.run_to_target(player, target, max_build_distance)
+        Run.run_to_target(player, targets[1], max_build_distance)
     end
 end
 
@@ -104,7 +135,7 @@ function M.render_ui(player)
         Game.get_or_set_data("labor", player.index, "force_rerender", true, false)
     end
 
-    local closest_reachable_ghost = get_closest_reachable_ghost(player)
+    local available_ghosts, unavailable_ghosts = find_reachable_ghosts(player)
     local current_target = Game.get_or_set_data("labor", player.index, "current_target", false, nil)
 
     -- get a reference to the grid table, remove any existing drawings, then save new drawings in it
@@ -114,13 +145,26 @@ function M.render_ui(player)
         ui_ids[k] = nil
     end
 
-    if closest_reachable_ghost then
+    for i, ghost in pairs(available_ghosts) do
         ui_ids[#ui_ids + 1] = rendering.draw_circle{
-            color = defines.color.white,
+            color = i == 1 and defines.color.white or defines.color.grey,
             radius = 0.5,
             width = 2,
             filled = false,
-            target = closest_reachable_ghost,
+            target = ghost,
+            surface = player.surface,
+            time_to_live = 60 * 60,
+            players = {player.index},
+            draw_on_ground = true,
+        }
+    end
+    for _, ghost in pairs(unavailable_ghosts) do
+        ui_ids[#ui_ids + 1] = rendering.draw_circle{
+            color = defines.color.brown,
+            radius = 0.5,
+            width = 2,
+            filled = false,
+            target = ghost,
             surface = player.surface,
             time_to_live = 60 * 60,
             players = {player.index},
