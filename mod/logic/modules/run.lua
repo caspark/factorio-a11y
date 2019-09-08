@@ -5,6 +5,14 @@ local Position = require("__stdlib__/stdlib/area/position")
 local Table = require("__stdlib__/stdlib/utils/table")
 local Selector = require("__A11y__/logic/utils/selector")
 
+-- if the player is moving along a path, stop moving them along it.
+local function stop_moving_player_along_path(player)
+    Game.get_or_set_data("ui", player.index, "force_rerender", true, true)
+    Game.get_or_set_data("run", player.index, "path_to_follow", true, nil)
+    Game.get_or_set_data("run", player.index, "path_progress", true, nil)
+    Game.get_or_set_data("run", player.index, "last_target", true, nil)
+end
+
 local M = {}
 
 -- replace whatever the user has grabbed with the runtool.
@@ -15,17 +23,10 @@ function M.grab_runtool(player)
     end
 end
 
--- if the player is moving along a path, stop moving them along it.
-function M.stop_moving_player_along_path(player)
-    Game.get_or_set_data("ui", player.index, "force_rerender", true, true)
-    Game.get_or_set_data("run", player.index, "path_to_follow", true, nil)
-    Game.get_or_set_data("run", player.index, "path_progress", true, nil)
-end
-
 -- try to calculate a path from the given player to the given target
 -- target can be either a Position or a LuaEntity
-function M.run_to_target(player, target)
-    M.stop_moving_player_along_path(player)
+function M.run_to_target(player, target, target_distance)
+    stop_moving_player_along_path(player)
 
     -- The path's collision mask determines what things <the thing that travels along the path>
     -- would collide with, and hence the things that need to be pathed around.
@@ -118,7 +119,7 @@ function M.run_to_target(player, target)
         start = start_pos,
         goal = target_position,
         force = player.force,
-        radius = how_close,
+        radius = how_close + target_distance,
         pathfind_flags = {
             allow_destroy_friendly_entities = false,
             cache = false,
@@ -133,6 +134,8 @@ function M.run_to_target(player, target)
     Logger.log("Issued pathfinding request to " .. target_position.x .. "," .. target_position.y
                    .. " (request-id: " .. path_id .. ")")
     Game.get_or_set_data("run", player.index, "last_path_id", true, path_id)
+    Game.get_or_set_data("run", player.index, "last_target", true,
+                         {entity = Is.Object(target) and target or nil, position = target_position})
 end
 
 function M.try_move_player_along_path(player)
@@ -163,7 +166,17 @@ function M.try_move_player_along_path(player)
         if next_waypoint == nil then
             Logger.log("Done moving player along path; ended up at " .. player.position.x .. ","
                            .. player.position.y)
-            M.stop_moving_player_along_path(player)
+
+            local last_target = Game.get_or_set_data("run", player.index, "last_target", false, nil)
+            local run_completed_event = {
+                name = Event.generate_event_name(M.events.run_completed),
+                player_index = player.index,
+                target_entity = last_target.entity,
+                target_position = last_target.position,
+            }
+
+            stop_moving_player_along_path(player)
+            Event.dispatch(run_completed_event)
             return
         end
         next_waypoint_dist = Position.distance(old_player_pos, next_waypoint.position)
@@ -222,6 +235,8 @@ function M.render_ui(player)
     end
 end
 
+M.events = {run_completed = 'a11y.events.run.completed', tool_used = 'a11y.events.run.tool_used'}
+
 function M.register_event_handlers()
     Event.register(defines.events.on_script_path_request_finished, function(event)
         local path_id = event.id
@@ -249,28 +264,33 @@ function M.register_event_handlers()
 
     Event.register({
         defines.events.on_player_selected_area, defines.events.on_player_alt_selected_area,
-    }, function(e)
-        if e.item ~= "runtool" then
+    }, function(event)
+        if event.item ~= "runtool" then
             return
         end
-        local player = game.players[e.player_index]
-        local area = e.area
+        local player = game.players[event.player_index]
+        local area = event.area
 
         local selected_entities = player.surface.find_entities(area)
 
         if #selected_entities > 0 then
             local target = selected_entities[1]
             player.print("Running to selected " .. q(target.name))
-            M.run_to_target(player, target)
+            M.run_to_target(player, target, 0)
         elseif player.selected ~= nil then
             local target = player.selected
             player.print("Running to highlighted " .. q(target.name))
-            M.run_to_target(player, target)
+            M.run_to_target(player, target, 0)
         else
             local target = area.left_top
             player.print("Running to position " .. target.x .. "," .. target.y)
-            M.run_to_target(player, target)
+            M.run_to_target(player, target, 0)
         end
+        Event.dispatch({
+            name = Event.generate_event_name(M.events.tool_used),
+            player_index = player.index,
+        })
+
         Selector.restore_held_item(player)
     end)
 
@@ -278,7 +298,7 @@ function M.register_event_handlers()
         "a11y-hook-player-walked-up", "a11y-hook-player-walked-right",
         "a11y-hook-player-walked-down", "a11y-hook-player-walked-left",
     }, function(event)
-        M.stop_moving_player_along_path(game.players[event.player_index])
+        stop_moving_player_along_path(game.players[event.player_index])
     end)
 end
 
