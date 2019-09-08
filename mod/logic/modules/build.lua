@@ -167,9 +167,16 @@ function M.register_event_handlers()
     Event.register(defines.events.on_player_cursor_stack_changed, function(event)
         local player = game.players[event.player_index]
 
-        -- TODO should clear the guide when this happens, but only if the user's cursor has changed to another item
-        -- player.print('cursor stack chanqged: ' .. serpent.block(event))
-        -- clear_build_history(player)
+        if player.cursor_stack.valid_for_read then
+            local build_history = Game.get_or_set_data("build", player.index, "last_build", false,
+                                                       {})
+            if player.cursor_stack.name ~= build_history.item then
+                reset_build_history(player, nil)
+            end
+        else
+            -- player's cursor is probably empty
+            reset_build_history(player, nil)
+        end
     end)
 end
 
