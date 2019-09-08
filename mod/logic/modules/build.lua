@@ -156,7 +156,7 @@ function M.register_event_handlers()
     Event.register(defines.events.on_put_item, function(event)
         local player = game.players[event.player_index]
 
-        if player.cursor_stack.valid_for_read then
+        if player.cursor_stack.valid_for_read and not player.cursor_stack.is_blueprint then
             extend_build(player, player.cursor_stack.name, event.position, event.direction,
                          event.shift_build)
         end
