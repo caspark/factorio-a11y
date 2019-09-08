@@ -14,6 +14,7 @@ data:extend({
     {type = "custom-input", name = "hotkey-command-window-show", key_sequence = "SHIFT + ALT + Y"},
     {type = "custom-input", name = "hotkey-explain-selection", key_sequence = "SHIFT + ALT + W"},
     {type = "custom-input", name = "hotkey-get-runtool", key_sequence = "SHIFT + ALT + R"},
+    {type = "custom-input", name = "hotkey-labor", key_sequence = "CONTROL + ALT + L"},
     {type = "custom-input", name = "hotkey-mine-closest-building", key_sequence = "SHIFT + ALT + B"},
     {type = "custom-input", name = "hotkey-mine-closest-resouce", key_sequence = "SHIFT + ALT + E"},
     {type = "custom-input", name = "hotkey-mine-selection", key_sequence = "SHIFT + ALT + M"},

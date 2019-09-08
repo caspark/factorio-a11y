@@ -8,6 +8,7 @@ local Commands = require("__A11y__/logic/modules/commands")
 local Craft = require("__A11y__/logic/modules/craft")
 local Dump = require("__A11y__/logic/modules/dump")
 local Inventory = require("__A11y__/logic/modules/inventory")
+local Labor = require("__A11y__/logic/modules/labor")
 local Mine = require("__A11y__/logic/modules/mine")
 local Refuel = require("__A11y__/logic/modules/refuel")
 local Reload = require("__A11y__/logic/modules/reload")
@@ -37,6 +38,7 @@ Event.register(defines.events.on_tick, function(_event)
         Run.try_move_player_along_path(player)
 
         -- then render the UI
+        Labor.render_ui(player)
         Mine.render_ui(player)
         Refuel.render_ui(player)
         Reload.render_ui(player)
@@ -49,6 +51,7 @@ end)
 
 Build.register_event_handlers()
 Inventory.register_event_handlers()
+Labor.register_event_handlers()
 Mine.register_event_handlers()
 Refuel.register_event_handlers()
 Reload.register_event_handlers()
@@ -65,6 +68,7 @@ local hotkey_actions = {
     ["hotkey-command-window-show"] = Commands.show_command_window,
     ["hotkey-explain-selection"] = Inventory.explain_selection,
     ["hotkey-get-runtool"] = Run.grab_runtool,
+    ["hotkey-labor"] = Labor.labor,
     ["hotkey-mine-closest-building"] = Mine.mine_closest_building,
     ["hotkey-mine-closest-resouce"] = Mine.mine_closest_resource,
     ["hotkey-mine-selection"] = Mine.mine_selection,

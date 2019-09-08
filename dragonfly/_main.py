@@ -227,6 +227,7 @@ class FactorioRule(dragonfly.MappingRule):
             # ally commands bound to hotkeys
             "explain it": dragonfly.Key("as-w"),
             "run there": FACTORIO_STOP_WALKING_ACTION + dragonfly.Key("as-r") + FACTORIO_UI_DELAY_ACTION + dragonfly.Mouse("left"),
+            "labor here": dragonfly.Key("ca-l"),
             "mine here": dragonfly.Key("as-e"),
             "raze here": dragonfly.Key("as-b"),
             "raze it": dragonfly.Key("as-m"),
