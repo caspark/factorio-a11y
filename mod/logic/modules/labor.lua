@@ -79,6 +79,17 @@ local function find_reachable_ghosts(player)
     return available_ghosts, unavailable_ghosts
 end
 
+local function build_distance(player, entity_name)
+    -- have an artificially lower build distance to make the player run around more
+    -- otherwise laboring would be way better than construction bots
+    local max_build_distance = player.resource_reach_distance / 2
+
+    local width, height = Sizer.calc_entity_width_and_height(entity_name)
+    local offset = math.max(width, height)
+
+    return max_build_distance + offset
+end
+
 local M = {}
 
 local function on_labor_target_reached(player)
@@ -99,11 +110,16 @@ local function on_labor_target_reached(player)
                          .. (' or '):join(possibilities))
     else
         local collisions = current_target.revive()
-        -- TODO need to handle collisions with player here (run to a free point further away - test with chemistry and rocket silo buildings)
         if collisions == nil or #collisions > 0 then
-            player.print('Failed to build ghost due to colliding entities: '
-                             .. serpent.block(collisions))
-            stop_laboring(player) -- abort entirely
+            -- we got a collision, probably with ourselves, so we need to run out of the way
+            local target_pos = player.surface
+                                   .find_non_colliding_position(current_target.ghost_name, -- prototype name
+                                                                player.position, -- center
+                100, -- arbitrary "fairly big" radius
+                1, -- precision for search (step size)
+                true -- force_to_tile_center
+                )
+            Run.run_to_target(player, target_pos, 0)
         else
             local removed_count = player.character.get_main_inventory().remove(items_to_use)
             Logger.log('Labor: removed ' .. removed_count .. ' of ' .. q(items_to_use.name))
@@ -114,12 +130,27 @@ local function on_labor_target_reached(player)
     end
 end
 
-function M.labor(player)
-    -- have an artificially lower build distance to make the player run around more
-    -- otherwise laboring would be way better than construction bots
-    local max_build_distance = player.resource_reach_distance / 2
+local function set_add_position(set, position)
+    if set[position.x] == nil then
+        set[position.x] = {}
+    end
+    set[position.x][position.y] = true
+end
 
+local function set_contains_position(set, position)
+    return set[position.x] ~= nil and set[position.x][position.y]
+end
+
+function M.labor(player)
     local new_targets = find_reachable_ghosts(player)
+
+    -- make a rudimentary set of positions we've seen to avoid duplicating entities in the target list
+    -- (not doing this makes it easy for the list of targets to explode to thousands of items, which
+    -- slows the game to a crawl)
+    local seen_positions = {}
+    for _, target in pairs(new_targets) do
+        set_add_position(seen_positions, target.position)
+    end
 
     local existing_targets = Game.get_or_set_data("labor", player.index, "current_targets", false,
                                                   {})
@@ -128,7 +159,8 @@ function M.labor(player)
         return calc_cheapest_available_item_for_ghost(player, ghost_prototype) ~= nil
     end)
     for _, target in pairs(existing_targets) do
-        if target.valid and has_available_items(target.ghost_prototype) then
+        if target.valid and not set_contains_position(seen_positions, target.position)
+            and has_available_items(target.ghost_prototype) then
             table.insert(new_targets, target)
         end
     end
@@ -142,9 +174,7 @@ function M.labor(player)
 
     local first_target = new_targets[1]
     if first_target then
-        local width, height = Sizer.calc_entity_width_and_height(first_target.ghost_name)
-        local offset = math.max(width, height)
-        Run.run_to_target(player, new_targets[1], offset + max_build_distance)
+        Run.run_to_target(player, new_targets[1], build_distance(player, first_target.ghost_name))
     end
 end
 
@@ -248,7 +278,7 @@ function M.register_event_handlers()
         if current_targets ~= nil then
             if not current_targets[1].valid then
                 stop_laboring(player)
-            elseif current_targets[1] == event.target_entity then
+            else
                 on_labor_target_reached(player)
             end
         end
