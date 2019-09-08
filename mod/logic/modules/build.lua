@@ -95,7 +95,6 @@ local function extend_build(player, building_item, building_position, building_d
                                                    Position.multiply(increment, {i, i}),
                                                    {width, height}))
 
-                -- TODO this isn't actually catching cases where the player is standing in the way
                 can_build_all = can_build_all and surface.can_place_entity{
                     name = building_item,
                     position = check_pos,
@@ -117,21 +116,17 @@ local function extend_build(player, building_item, building_position, building_d
                     local check_box = Area.new(building_prototype.selection_box)
                     check_box = Area.offset(check_box, check_pos)
                     draw_block(player, defines.color.green, check_box)
-                    -- TODO how does this behave when the player has 2 items and we need 3 to fill the gap?
-                    -- TODO this is limited by player's reach (but that may be fixed when moving to ghosts?)
-                    if player.can_build_from_cursor{
+                    surface.create_entity{
+                        name = 'entity-ghost',
                         position = check_pos,
-                        direction = building_direction,
-                    } then
-                        -- TODO we should be building ghosts here instead of the real thing
-                        player.build_from_cursor{
-                            position = check_pos,
-                            direction = building_direction,
-                        }
-                    else
-                        -- TODO display some hover text here about something being in the way (or running out of items)
-                        break
-                    end
+                        direction = build_history.direction,
+                        force = player.force,
+                        player = player,
+                        raise_built = true,
+                        -- ghost specific params
+                        inner_name = building_prototype.name,
+                        expires = false,
+                    }
                 end
             end
         end
