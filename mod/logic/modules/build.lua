@@ -41,7 +41,8 @@ local function calc_entity_width_and_height(entity_prototype_name)
 end
 
 local function render_guide_ui(player, building_item, building_position, building_direction)
-    -- update new guide UI
+    local max_guide_length_in_tiles = 50 -- how long in tiles should the guide extend to either side?
+
     local building_prototype = game.entity_prototypes[building_item]
     local building_box = Area.construct(building_position.x
                                             + building_prototype.selection_box.left_top.x,
@@ -54,9 +55,11 @@ local function render_guide_ui(player, building_item, building_position, buildin
     local width, height = calc_entity_width_and_height(building_item)
     local guide_dirs = {{width, 0}, {-width, 0}, {0, height}, {0, -height}}
     local guide_handles = {}
-    for _, direction in pairs(guide_dirs) do
-        -- TODO display a longer guide for smaller items, like belts?
-        for i = 1, 10 do
+    local max_guide_width = math.floor(max_guide_length_in_tiles / width)
+    local max_guide_height = math.floor(max_guide_length_in_tiles / height)
+    local max_guide_length = {max_guide_width, max_guide_width, max_guide_height, max_guide_height}
+    for dir_i, direction in pairs(guide_dirs) do
+        for i = 1, max_guide_length[dir_i] do
             local offset = Position.multiply(direction, {i, i})
             local new_pos = Position.add(offset, building_position)
             local new_area = Area.offset(building_box, offset)
@@ -66,7 +69,7 @@ local function render_guide_ui(player, building_item, building_position, buildin
                 direction = building_direction,
                 force = player.force,
                 build_check_type = defines.build_check_type.ghost_place,
-                forced = true,
+                forced = false,
             } then
                 table.insert(guide_handles, draw_block(player, defines.color.yellow, new_area))
             else
@@ -120,7 +123,7 @@ local function extend_build(player, building_item, building_position, building_d
                     direction = building_direction,
                     force = player.force,
                     build_check_type = defines.build_check_type.ghost_place,
-                    forced = true,
+                    forced = false,
                 }
             end
 
