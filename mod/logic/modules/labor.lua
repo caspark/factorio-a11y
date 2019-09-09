@@ -92,35 +92,31 @@ end
 
 local function calc_labour_delay(player, entity_name)
     -- we want to scale the labour cost based on the production cost
-    -- rocket silo is ~ 226,000 production cost
-    -- nuclear reactor ~ 71,000
-    -- centrifuge ~ 12671
-    -- oil refinery ~ 1,200
-    -- lab ~ 230
-    -- inserter ~ 40
-    -- transport belt ~ 10
+    -- see also M.test_labor_delays() for faster iteration on this
 
     local prod_cost = calc_production_costs_of_items()[entity_name]
     if prod_cost == nil then
         prod_cost = 9999999 -- arbitrary really high value
     end
 
-    local min_cost = 10
-    local max_cost = 100000
-    local min_delay = 0
-    local max_delay = 60 * 60
+    local min_cost = 150
+    local max_cost = 1000
+    local min_delay = 30
+    local max_delay = 60 * 45
 
     prod_cost = math.min(max_cost, prod_cost)
+    prod_cost = math.max(min_cost, prod_cost)
 
-    return math.floor(min_delay + prod_cost * (min_cost / max_cost) * (max_delay - min_delay))
+    return math.floor(min_delay + (prod_cost - min_cost) / (max_cost - min_cost)
+                          * (max_delay - min_delay))
 end
 
 local M = {}
 
 function M.test_labor_delays(player)
     local entity_names = {
-        'rocket-silo', 'nuclear-reactor', 'centrifuge', 'oil-refinery', 'lab', 'inserter',
-        'transport-belt',
+        'rocket-silo', 'nuclear-reactor', 'centrifuge', 'oil-refinery', 'lab', 'gun-turret',
+        'express-transport-belt', 'splitter', 'inserter', 'transport-belt',
     }
     for _, entity_name in pairs(entity_names) do
         local prod_cost = calc_production_costs_of_items()[entity_name]
@@ -183,7 +179,7 @@ local function continue_laboring(player)
                                    .find_non_colliding_position(current_target.ghost_name, -- prototype name
                                                                 player.position, -- center
                 100, -- arbitrary "fairly big" radius
-                1, -- precision for search (step size)
+                2, -- precision for search (step size)
                 true -- force_to_tile_center
                 )
             if target_pos == nil then
@@ -324,7 +320,26 @@ function M.render_ui(player)
     if current_targets then
         local seen_first_entity = false
         for i, current_target in pairs(current_targets) do
-            if Is.Object(current_target) and current_target.valid then
+            if Is.Number(current_target) and current_target < 0 then
+                -- it's a delay, so visualize it over the real current target
+                local real_current_target = current_targets[i + 1]
+                local delay_size = calc_labour_delay(player, real_current_target.ghost_name)
+                local delay_remaining = -current_target
+                ui_ids[#ui_ids + 1] = rendering.draw_arc{
+                    color = defines.color.white,
+                    max_radius = 0.5,
+                    min_radius = 0,
+                    start_angle = -math.pi / 2,
+                    angle = 2 * math.pi - (2 * math.pi * delay_remaining / delay_size),
+                    target = real_current_target,
+                    surface = player.surface,
+                    time_to_live = 60 * 60,
+                    players = {player.index},
+                    draw_on_ground = true,
+                }
+                -- now we need the UI to update even if the player isn't moving
+                Game.get_or_set_data("labor", player.index, "force_rerender", true, true)
+            elseif Is.Object(current_target) and current_target.valid then
                 if not seen_first_entity then
                     seen_first_entity = true
                     ui_ids[#ui_ids + 1] = rendering.draw_line{
