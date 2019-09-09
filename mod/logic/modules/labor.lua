@@ -2,6 +2,7 @@ require('__stdlib__/stdlib/utils/defines/color')
 local production_score = require('production-score') -- vanilla module, used for production_score.generate_price_list()
 local Area = require("__stdlib__/stdlib/area/area")
 local Event = require("__stdlib__/stdlib/event/event")
+local Is = require('__stdlib__/stdlib/utils/is')
 local Game = require("__stdlib__/stdlib/game")
 local Memoize = require("__stdlib__/stdlib/vendor/memoize")
 local Position = require("__stdlib__/stdlib/area/position")
@@ -89,15 +90,80 @@ local function build_distance(player, entity_name)
     return max_build_distance + offset
 end
 
+local function calc_labour_delay(player, entity_name)
+    -- we want to scale the labour cost based on the production cost
+    -- rocket silo is ~ 226,000 production cost
+    -- nuclear reactor ~ 71,000
+    -- centrifuge ~ 12671
+    -- oil refinery ~ 1,200
+    -- lab ~ 230
+    -- inserter ~ 40
+    -- transport belt ~ 10
+
+    local prod_cost = calc_production_costs_of_items()[entity_name]
+    if prod_cost == nil then
+        prod_cost = 9999999 -- arbitrary really high value
+    end
+
+    local min_cost = 10
+    local max_cost = 100000
+    local min_delay = 0
+    local max_delay = 60 * 60
+
+    prod_cost = math.min(max_cost, prod_cost)
+
+    return math.floor(min_delay + prod_cost * (min_cost / max_cost) * (max_delay - min_delay))
+end
+
 local M = {}
 
-local function on_labor_target_reached(player)
-    player.clean_cursor() -- clean cursor so we don't have to worry about items in the cursor stack
+function M.test_labor_delays(player)
+    local entity_names = {
+        'rocket-silo', 'nuclear-reactor', 'centrifuge', 'oil-refinery', 'lab', 'inserter',
+        'transport-belt',
+    }
+    for _, entity_name in pairs(entity_names) do
+        local prod_cost = calc_production_costs_of_items()[entity_name]
+        local delay = calc_labour_delay(player, entity_name)
+        player.print(entity_name .. ' costs ' .. prod_cost .. ' and delays '
+                         .. string.format("%.2f", delay / 60) .. ' secs')
+    end
+end
 
+local function continue_laboring(player)
     local current_targets = Game.get_or_set_data("labor", player.index, "current_targets", false,
                                                  nil)
+    if current_targets == nil then
+        return
+    end
+
+    -- check to see if we're waiting for a delay to expire
+    if current_targets[1] ~= nil and Is.Number(current_targets[1]) then
+        -- player.print(game.tick .. ' target = ' .. serpent.block(current_targets[1]))
+
+        if current_targets[1] > 0 then
+            -- a positive delay means we can't start counting down the delay yet
+            -- (typically the delay is switched to negative when a run completes, to signify
+            -- we can start counting the seconds of the delay)
+            return
+        elseif current_targets[1] < 0 then
+            -- treat this target as a delay for that many ticks, assuming this function is called once per tick
+            current_targets[1] = current_targets[1] + 1
+            Game.get_or_set_data("labor", player.index, "current_targets", true, current_targets)
+            return
+        else
+            -- done with the delay, move one
+            pop_current_target(player)
+        end
+    end
+
     local current_target = current_targets[1]
-    Game.get_or_set_data("labor", player.index, "current_targets", true, current_targets)
+    if current_target == nil then
+        stop_laboring(player) -- we've reached the end of the labor queue
+        return
+    end
+
+    player.clean_cursor() -- clean cursor so we don't have to worry about items in the cursor stack
 
     local ghost_prototype = current_target.ghost_prototype
     local items_to_use = calc_cheapest_available_item_for_ghost(player,
@@ -170,7 +236,8 @@ function M.labor(player)
         return calc_cheapest_available_item_for_ghost(player, ghost_prototype) ~= nil
     end)
     for _, target in pairs(existing_targets) do
-        if target.valid and not set_contains_position(seen_positions, target.position)
+        if Is.Object(target) and target.valid
+            and not set_contains_position(seen_positions, target.position)
             and has_available_items(target.ghost_prototype) then
             table.insert(new_targets, target)
         end
@@ -181,12 +248,22 @@ function M.labor(player)
     table.sort(new_targets, function(a, b)
         return dist(a) < dist(b)
     end)
-    Game.get_or_set_data("labor", player.index, "current_targets", true, new_targets)
-
     local first_target = new_targets[1]
+
     if first_target then
-        Run.run_to_target(player, new_targets[1], build_distance(player, first_target.ghost_name))
+        -- insert a delay before we deal with the first target
+        table.insert(new_targets, 1, calc_labour_delay(player, first_target.ghost_name))
+
+        Game.get_or_set_data("labor", player.index, "current_targets", true, new_targets)
+
+        Run.run_to_target(player, first_target, build_distance(player, first_target.ghost_name))
+    else
+        Game.get_or_set_data("labor", player.index, "current_targets", true, new_targets)
     end
+end
+
+function M.try_continue_laboring(player)
+    continue_laboring(player)
 end
 
 function M.render_ui(player)
@@ -245,9 +322,11 @@ function M.render_ui(player)
     end
 
     if current_targets then
+        local seen_first_entity = false
         for i, current_target in pairs(current_targets) do
-            if current_target.valid then
-                if i == 1 then
+            if Is.Object(current_target) and current_target.valid then
+                if not seen_first_entity then
+                    seen_first_entity = true
                     ui_ids[#ui_ids + 1] = rendering.draw_line{
                         color = defines.color.white,
                         width = 1,
@@ -277,7 +356,6 @@ function M.render_ui(player)
             end
         end
     end
-
 end
 
 function M.register_event_handlers()
@@ -287,10 +365,14 @@ function M.register_event_handlers()
         local current_targets = Game.get_or_set_data("labor", player.index, "current_targets",
                                                      false, nil)
         if current_targets ~= nil then
-            if not current_targets[1].valid then
+            if Is.Object(current_targets[1]) and not current_targets[1].valid then
                 stop_laboring(player)
             else
-                on_labor_target_reached(player)
+                if Is.Number(current_targets[1]) and current_targets[1] > 0 then
+                    -- signify that we can start dealing with the delay
+                    current_targets[1] = -current_targets[1]
+                end
+                continue_laboring(player)
             end
         end
     end)

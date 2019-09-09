@@ -88,7 +88,6 @@ local function extend_build(player, building_item, building_position, building_d
     if shift_build and build_history ~= nil
         and (build_history.position.x == building_position.x or build_history.position.y
             == building_position.y) then
-        player.print('line building triggered')
 
         local offset = Position.subtract(building_position, build_history.position)
         offset = Position.divide(offset, {width, height})

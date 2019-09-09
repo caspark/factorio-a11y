@@ -203,6 +203,9 @@ class FactorioRule(dragonfly.MappingRule):
             "data list items": dragonfly.Function(data_list_items),
             "data list recipes": dragonfly.Function(data_list_recipes),
 
+            # commands for easy testing
+            "test labor delays": make_factorio_action_a11y_command(["test_labor_delays"]),
+
             "zoom <n>": dragonfly.Function(factorio_set_zoom),
             "zoom out": dragonfly.Function(lambda: factorio_set_zoom(0)),
             "zoom in": dragonfly.Function(lambda: factorio_set_zoom(len(FACTORIO_ZOOM_LEVELS)-2)),

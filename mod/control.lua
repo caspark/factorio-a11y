@@ -36,6 +36,7 @@ Event.register(defines.events.on_tick, function(_event)
     for _, player in pairs(game.players) do
         -- do any game state updates first to avoid UI being out of date
         Run.try_move_player_along_path(player)
+        Labor.try_continue_laboring(player)
 
         -- then render the UI
         Labor.render_ui(player)
@@ -111,5 +112,6 @@ a11y_api = {
     craft_item = Craft.craft_item,
     craft_selection = Craft.craft_selection,
     dump_data = Dump.dump_data,
+    test_labor_delays = Labor.test_labor_delays,
 }
 Commands.register_commands(a11y_api)
