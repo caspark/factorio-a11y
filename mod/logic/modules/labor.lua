@@ -26,7 +26,6 @@ end
 local function calc_cheapest_available_item_for_ghost(player, ghost_prototype)
     local possibilities = {}
     for _, possible_stack in pairs(ghost_prototype.items_to_place_this) do
-        -- TODO this refuses to build when player has that item in their cursor stack but not in inventory
         local item_count = player.character.get_main_inventory().get_item_count(possible_stack.name)
         if item_count >= possible_stack.count then
             table.insert(possibilities, possible_stack)
@@ -93,6 +92,8 @@ end
 local M = {}
 
 local function on_labor_target_reached(player)
+    player.clean_cursor() -- clean cursor so we don't have to worry about items in the cursor stack
+
     local current_targets = Game.get_or_set_data("labor", player.index, "current_targets", false,
                                                  nil)
     local current_target = current_targets[1]
@@ -147,6 +148,11 @@ local function set_contains_position(set, position)
 end
 
 function M.labor(player)
+    -- clean the cursor so we don't have to worry about accounting for items in the cursor stack
+    -- (also thematically it doesn't make sense that the character can be doing other things while
+    -- laboring)
+    player.clean_cursor()
+
     local new_targets = find_reachable_ghosts(player)
 
     -- make a rudimentary set of positions we've seen to avoid duplicating entities in the target list
