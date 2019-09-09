@@ -122,7 +122,7 @@ Basically you should say `data reload` anytime after unloading & reloading your 
 
 A11y can build ghosts for you thanks to your character's newfound willingness to do **hard backbreaking labor**:
 
-* `labor here` will start your character laboring if there are any ghosts in reach: your character will run to each ghost in turn and build it using an item from your inventory.
+* `labor here` will start your character laboring if there are any ghosts in reach: your character will run to each ghost in turn and build it using an item from your inventory. More expensive buildings take longer to build, of course!
 
 Tips:
 
