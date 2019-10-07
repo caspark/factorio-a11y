@@ -35,5 +35,6 @@ read_globals = {
     "rendering",
     "defines",
     -- other globals factorio exposes
-    "serpent"
+    "serpent",
+    "table_size"
 }
