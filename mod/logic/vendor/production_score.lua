@@ -1,4 +1,23 @@
--- vendored version of vanilla's production-score.lua library
+-- Vendored version of vanilla's production-score.lua library as of 0.17.69, since Factorio
+-- developers change this without considering it a breaking change.
+--
+-- Changes have been made to: 1) autoformat 2) fix lint errors relating to globals and unused
+-- variables 3) vendor util.product_amount as well 4) move ingredient_multiplier() and
+-- energy_addition() to the top of the file so that subsequent functions can close over it.
+--
+local function util_product_amount(product)
+    return product.probability * (product.amount or ((product.amount_min + product.amount_max) / 2))
+end
+
+local function ingredient_multiplier(recipe, param)
+    return (param.ingredient_exponent or 1) ^ (table_size(recipe) - 2)
+end
+
+local ln = math.log
+local function energy_addition(recipe, cost)
+    return ((ln(recipe.energy + 1) * (cost ^ 0.5)))
+end
+
 local function get_total_production_counts(production_statistics)
     local produced = production_statistics.input_counts
     local consumed = production_statistics.output_counts
@@ -15,10 +34,10 @@ end
 local function get_raw_resources()
     local raw_resources = {}
     local entities = game.entity_prototypes
-    for name, entity_prototype in pairs(entities) do
+    for _name, entity_prototype in pairs(entities) do
         if entity_prototype.resource_category then
             if entity_prototype.mineable_properties then
-                for k, product in pairs(entity_prototype.mineable_properties.products) do
+                for _k, product in pairs(entity_prototype.mineable_properties.products) do
                     raw_resources[product.name] = true
                 end
             end
@@ -33,17 +52,17 @@ end
 local function get_product_list()
     local product_list = {}
     local recipes = game.recipe_prototypes
-    for recipe_name, recipe_prototype in pairs(recipes) do
+    for _recipe_name, recipe_prototype in pairs(recipes) do
         local ingredients = recipe_prototype.ingredients
         local products = recipe_prototype.products
-        for k, product in pairs(products) do
+        for _k, product in pairs(products) do
             if not product_list[product.name] then
                 product_list[product.name] = {}
             end
             local recipe_ingredients = {}
-            local product_amount = util.product_amount(product)
+            local product_amount = util_product_amount(product)
             if product_amount > 0 then
-                for j, ingredient in pairs(ingredients) do
+                for _j, ingredient in pairs(ingredients) do
                     recipe_ingredients[ingredient.name] =
                         ((ingredient.amount) / #products) / product_amount
                 end
@@ -56,7 +75,7 @@ local function get_product_list()
     local entities = game.entity_prototypes
     --[[Now we do some tricky stuff for space science type items]]
     local rocket_silos = {}
-    for k, entity in pairs(entities) do
+    for _k, entity in pairs(entities) do
         if entity.type == "rocket-silo" and entity.fixed_recipe then
             local recipe = recipes[entity.fixed_recipe]
             if not recipe then
@@ -65,7 +84,7 @@ local function get_product_list()
             local required_parts = entity.rocket_parts_required
             local list = {}
             for k, product in pairs(recipe.products) do
-                local product_amount = util.product_amount(product)
+                local product_amount = util_product_amount(product)
                 if product_amount > 0 then
                     product_amount = product_amount * required_parts
                     list[product.name] = product_amount
@@ -75,14 +94,14 @@ local function get_product_list()
             table.insert(rocket_silos, list)
         end
     end
-    for k, item in pairs(items) do
+    for _k, item in pairs(items) do
         local launch_products = item.rocket_launch_products
         if launch_products then
-            for k, launch_product in pairs(launch_products) do
+            for _l, launch_product in pairs(launch_products) do
                 product_list[launch_product.name] = product_list[launch_product.name] or {}
-                local launch_product_amount = util.product_amount(launch_product)
+                local launch_product_amount = util_product_amount(launch_product)
                 if launch_product_amount > 0 then
-                    for k, silo_products in pairs(rocket_silos) do
+                    for _m, silo_products in pairs(rocket_silos) do
                         local this_silo = {}
                         for product_name, product_count in pairs(silo_products) do
                             this_silo[product_name] = product_count / launch_product_amount
@@ -118,21 +137,21 @@ local default_param = function()
     }
 end
 
-function deduce_nil_prices(price_list, param)
+local function deduce_nil_prices(price_list, param)
     local nil_prices = {}
-    for name, item in pairs(game.item_prototypes) do
+    for name, _item in pairs(game.item_prototypes) do
         if not price_list[name] then
             nil_prices[name] = {}
         end
     end
-    for name, item in pairs(game.fluid_prototypes) do
+    for name, _item in pairs(game.fluid_prototypes) do
         if not price_list[name] then
             nil_prices[name] = {}
         end
     end
     local recipes = game.recipe_prototypes
-    for name, recipe in pairs(recipes) do
-        for k, ingredient in pairs(recipe.ingredients) do
+    for _name, recipe in pairs(recipes) do
+        for _k, ingredient in pairs(recipe.ingredients) do
             if nil_prices[ingredient.name] then
                 table.insert(nil_prices[ingredient.name], recipe)
             end
@@ -163,7 +182,7 @@ function deduce_nil_prices(price_list, param)
                 end
                 local product_value = 0
                 for k, product in pairs(recipe.products) do
-                    local amount = util.product_amount(product)
+                    local amount = util_product_amount(product)
                     local product_price = price_list[product.name]
                     if product_price then
                         product_value = product_value + product_price * amount
@@ -189,33 +208,24 @@ function deduce_nil_prices(price_list, param)
     end
 end
 
-function ingredient_multiplier(recipe, param)
-    return (param.ingredient_exponent or 1) ^ (table_size(recipe) - 2)
-end
+local M = {}
 
-local ln = math.log
-function energy_addition(recipe, cost)
-    return ((ln(recipe.energy + 1) * (cost ^ 0.5)))
-end
-
-production_score = {}
-
-production_score.get_default_param = function()
+M.get_default_param = function()
     return default_param()
 end
 
-production_score.generate_price_list = function(param)
+M.generate_price_list = function(param)
     local param = param or default_param()
     local price_list = param.seed_prices or {}
 
     local resource_list = get_raw_resources()
-    for name, k in pairs(resource_list) do
+    for name, _k in pairs(resource_list) do
         if not price_list[name] then
             price_list[name] = param.raw_resource_price
         end
     end
 
-    for k, name in pairs(param.resource_ignore or {}) do
+    for _k, name in pairs(param.resource_ignore or {}) do
         price_list[name] = nil
     end
 
@@ -269,21 +279,21 @@ production_score.generate_price_list = function(param)
         end
     end
     local items = game.item_prototypes
-    for name, item in pairs(items) do
+    for name, _item in pairs(items) do
         local current_loop = {}
         get_price_recursive(name, current_loop)
     end
     local fluids = game.fluid_prototypes
-    for name, fluid in pairs(fluids) do
+    for name, _fluid in pairs(fluids) do
         local current_loop = {}
         get_price_recursive(name, current_loop)
     end
     deduce_nil_prices(price_list, param)
-    for name, item in pairs(items) do
+    for name, _item in pairs(items) do
         local current_loop = {}
         get_price_recursive(name, current_loop, true)
     end
-    for name, fluid in pairs(fluids) do
+    for name, _fluid in pairs(fluids) do
         local current_loop = {}
         get_price_recursive(name, current_loop, true)
     end
@@ -291,10 +301,10 @@ production_score.generate_price_list = function(param)
     return price_list
 end
 
-production_score.get_production_scores = function(price_list)
-    local price_list = price_list or production_score.generate_price_list()
+M.get_production_scores = function(price_list)
+    local price_list = price_list or M.generate_price_list()
     local scores = {}
-    for k, force in pairs(game.forces) do
+    for _k, force in pairs(game.forces) do
         local score = 0
         for name, value in pairs(get_total_production_counts(force.item_production_statistics)) do
             local price = price_list[name]
@@ -313,4 +323,4 @@ production_score.get_production_scores = function(price_list)
     return scores
 end
 
-return production_score
+return M

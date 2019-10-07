@@ -1,4 +1,3 @@
-local production_score = require('production-score') -- vanilla module, used for production_score.generate_price_list()
 require('__stdlib__/stdlib/utils/defines/color')
 local Area = require("__stdlib__/stdlib/area/area")
 local Event = require("__stdlib__/stdlib/event/event")
@@ -6,8 +5,9 @@ local Game = require("__stdlib__/stdlib/game")
 local Memoize = require("__stdlib__/stdlib/vendor/memoize")
 local Position = require("__stdlib__/stdlib/area/position")
 local Table = require("__stdlib__/stdlib/utils/table")
+local ProductionScore = require("__A11y__/logic/vendor/production_score")
 
-local calc_production_costs_of_items = Memoize(production_score.generate_price_list)
+local calc_production_costs_of_items = Memoize(ProductionScore.generate_price_list)
 
 -- returns a map of entities which can be reloaded to the ammo type(s) they can use
 local get_reloadables_to_ammo_categories = Memoize(
