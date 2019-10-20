@@ -6,6 +6,7 @@ local Memoize = require("__stdlib__/stdlib/vendor/memoize")
 local Position = require("__stdlib__/stdlib/area/position")
 local Table = require("__stdlib__/stdlib/utils/table")
 local ProductionScore = require("__A11y__/logic/vendor/production_score")
+local Text = require("__A11y__/logic/utils/text")
 
 local calc_production_costs_of_items = Memoize(ProductionScore.generate_price_list)
 
@@ -200,6 +201,8 @@ local function reload_entity(player, target, ammo_count)
                     msg = msg .. removed_count .. " from player inventory"
                     Logger.log(msg)
                 end
+
+                Text.spawn_floating_item_delta(player, target, ammo_name, -removed_count)
 
                 ---- now we're all done!
                 return nil, used_ammo

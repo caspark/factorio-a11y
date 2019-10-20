@@ -3,18 +3,7 @@ local Area = require("__stdlib__/stdlib/area/area")
 local Event = require("__stdlib__/stdlib/event/event")
 local Selector = require("__A11y__/logic/utils/selector")
 local Categories = require("__A11y__/logic/utils/categories")
-
-local function spawn_floating_text(entity, text, offY)
-    local surface = entity.surface
-    local pos = entity.position
-
-    surface.create_entity({
-        name = "flying-text",
-        position = pos,
-        text = text,
-        color = defines.color.white,
-    })
-end
+local Text = require("__A11y__/logic/utils/text")
 
 local function try_grab_real_item_if_holding_ghost(player)
     local held_item, held_source = Selector.player_held(player)
@@ -53,11 +42,8 @@ function M.vacuum(player, item_name, item_limit)
                     if inventory.can_insert(item_on_ground.stack) then
                         local inserted_count = inventory.insert(item_on_ground.stack)
                         vacuumed_count = vacuumed_count + inserted_count
-                        spawn_floating_text(item_on_ground, {
-                            "", "+", inserted_count, " ",
-                            game.item_prototypes[item_name].localised_name, " (",
-                            inventory.get_item_count(item_name), ")",
-                        })
+                        Text.spawn_floating_item_delta(player, item_on_ground, item_name,
+                                                       inserted_count)
                         item_on_ground.stack.clear()
                     else
                         -- inventory is full, bail out
@@ -92,11 +78,8 @@ function M.vacuum(player, item_name, item_limit)
                             if inventory.can_insert(line_item_fake_stack) then
                                 local inserted_count = inventory.insert(line_item_fake_stack)
                                 vacuumed_count = vacuumed_count + inserted_count
-                                spawn_floating_text(entity, {
-                                    "", "+", inserted_count, " ",
-                                    game.item_prototypes[line_item_name].localised_name, " (",
-                                    inventory.get_item_count(line_item_name), ")",
-                                })
+                                Text.spawn_floating_item_delta(player, entity, line_item_name,
+                                                               inserted_count)
                                 line.remove_item{name = line_item_name, count = inserted_count}
                             else
                                 -- inventory is full, bail out

@@ -4,6 +4,7 @@ local Game = require("__stdlib__/stdlib/game")
 local Memoize = require("__stdlib__/stdlib/vendor/memoize")
 local Position = require("__stdlib__/stdlib/area/position")
 local Table = require("__stdlib__/stdlib/utils/table")
+local Text = require("__A11y__/logic/utils/text")
 
 -- Return a map of: name of prototype that takes fuel -> list of fuel categories accepted.
 local get_burners_to_fuel_categories = Memoize(function()
@@ -157,6 +158,8 @@ local function refuel_entity(player, target, refuel_count)
                     msg = msg .. removed_count .. " from player inventory"
                     Logger.log(msg)
                 end
+
+                Text.spawn_floating_item_delta(player, target, used_fuel.name, -removed_count)
 
                 ---- now we're all done!
                 return nil, used_fuel
