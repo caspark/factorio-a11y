@@ -67,23 +67,25 @@ function M.vacuum(player, item_name, item_limit)
                 for line_index = 1, num_lines do
                     local line = entity.get_transport_line(line_index)
                     for line_item_name, line_item_count in pairs(line.get_contents()) do
-                        found_count = found_count + line_item_count
-                        if line_item_name == item_name and vacuumed_count < item_limit
-                            and not inventory_full then
-                            local line_item_fake_stack =
-                                {
-                                    name = line_item_name,
-                                    count = math.min(line_item_count, item_limit - vacuumed_count),
-                                }
-                            if inventory.can_insert(line_item_fake_stack) then
-                                local inserted_count = inventory.insert(line_item_fake_stack)
-                                vacuumed_count = vacuumed_count + inserted_count
-                                Text.spawn_floating_item_delta(player, entity, line_item_name,
-                                                               inserted_count)
-                                line.remove_item{name = line_item_name, count = inserted_count}
-                            else
-                                -- inventory is full, bail out
-                                inventory_full = true
+                        if line_item_name == item_name then
+                            found_count = found_count + line_item_count
+                            if vacuumed_count < item_limit and not inventory_full then
+                                local line_item_fake_stack =
+                                    {
+                                        name = line_item_name,
+                                        count = math.min(line_item_count,
+                                                         item_limit - vacuumed_count),
+                                    }
+                                if inventory.can_insert(line_item_fake_stack) then
+                                    local inserted_count = inventory.insert(line_item_fake_stack)
+                                    vacuumed_count = vacuumed_count + inserted_count
+                                    Text.spawn_floating_item_delta(player, entity, line_item_name,
+                                                                   inserted_count)
+                                    line.remove_item{name = line_item_name, count = inserted_count}
+                                else
+                                    -- inventory is full, bail out
+                                    inventory_full = true
+                                end
                             end
                         end
                     end
@@ -99,7 +101,9 @@ function M.vacuum(player, item_name, item_limit)
 
     local msg = ''
     local remaining_count = found_count - vacuumed_count
-    if vacuumed_count == 0 then
+    if found_count == 0 then
+        msg = 'No ' .. q(item_name) .. ' found within reach'
+    elseif vacuumed_count == 0 then
         msg = 'Failed to vacuum any of ' .. found_count .. ' ' .. q(item_name) .. ' within reach'
     else
         msg = 'Vacuumed ' .. vacuumed_count .. ' of ' .. found_count .. ' ' .. q(item_name)
