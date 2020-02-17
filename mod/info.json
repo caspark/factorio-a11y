@@ -5,10 +5,10 @@
     "author": "asparck",
     "contact": "factorio-mods@asparck.com",
     "homepage": "",
-    "factorio_version": "0.17",
+    "factorio_version": "0.18",
     "dependencies": [
         "base >= 0.17",
-        "stdlib >= 1.0.2"
+        "stdlib >= 1.4.1"
     ],
     "description": "Adds accessibility helpers to Factorio to help with hands free playing"
 }
