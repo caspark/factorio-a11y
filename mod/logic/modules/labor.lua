@@ -527,7 +527,7 @@ function M.render_ui(player)
 
     for i, ghost in pairs(available_ghosts) do
         ui_ids[#ui_ids + 1] = rendering.draw_circle {
-            color = i == 1 and defines.color.white or defines.color.grey,
+            color = defines.color.grey,
             radius = 0.5,
             width = 2,
             filled = false,
