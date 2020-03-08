@@ -387,7 +387,7 @@ local function render_task_queue_and_pool_ui(player)
                     angle = 2 * math.pi - (2 * math.pi * delay_remaining / task.do_wait_time),
                     target = entity,
                     surface = entity.surface,
-                    time_to_live = 10,
+                    time_to_live = 2,
                     players = {player.index},
                     draw_on_ground = true,
                 }
@@ -403,7 +403,7 @@ local function render_task_queue_and_pool_ui(player)
                         from = primary_task_entity,
                         to = player.character,
                         surface = player.surface,
-                        time_to_live = 10,
+                        time_to_live = 2,
                         players = {player.index},
                         draw_on_ground = true,
                     }
@@ -422,7 +422,7 @@ local function render_task_queue_and_pool_ui(player)
                     text = tostring(i + 1),
                     target = entity,
                     surface = entity.surface,
-                    time_to_live = 10,
+                    time_to_live = 2,
                     players = {player.index},
                     draw_on_ground = true,
                 }
