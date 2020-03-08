@@ -196,6 +196,10 @@ local function build_new_task_pool(player, old_task_pool)
         end
     end
 
+    return task_pool
+end
+
+local function sort_task_pool(player, task_pool)
     -- sort all tasks to find which one we want to do first
     -- basically any task involving building or deconstructing should be prioritized according to
     -- how close it is, while any other task should happen before building or deconstructing.
@@ -211,8 +215,6 @@ local function build_new_task_pool(player, old_task_pool)
         end
     end)
     table.sort(task_pool, function(a, b) return dist(a) < dist(b) end)
-
-    return task_pool
 end
 
 -- Given a task, return a list of all tasks that need to be completed to get that task done
@@ -419,6 +421,7 @@ end
 function M.labor(player)
     local old_task_pool = Game.get_or_set_data("labor", player.index, "task_pool", false, {})
     local task_pool = build_new_task_pool(player, old_task_pool)
+    sort_task_pool(player, task_pool)
     Game.get_or_set_data("labor", player.index, "task_pool", true, task_pool)
 
     if task_pool[1] then
@@ -573,6 +576,9 @@ function M.register_event_handlers()
 
         if task.do_arrival then
             task.do_arrival_completed = true
+            local task_pool = Game.get_or_set_data("labor", player.index, "task_pool", false, {})
+            sort_task_pool(player, task_pool)
+            Game.get_or_set_data("labor", player.index, "task_pool", true, task_pool)
         else
             clear_all_tasks(player)
         end
