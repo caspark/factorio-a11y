@@ -22,11 +22,10 @@ end
 local M = {}
 
 function M.vacuum(player, item_name, item_limit)
-    local reach_area = Area.adjust({player.position, player.position},
-                                   {player.reach_distance, player.reach_distance})
     -- first pick up everything matching on the ground
     local items_on_ground = player.surface.find_entities_filtered{
-        area = reach_area,
+        position = player.position,
+        radius = player.reach_distance,
         name = 'item-on-ground',
     }
 
@@ -56,7 +55,8 @@ function M.vacuum(player, item_name, item_limit)
 
     -- then pick up items from belts
     local entities = player.surface.find_entities_filtered{
-        area = reach_area,
+        position = player.position,
+        radius = player.reach_distance,
         -- we want all the TransportBeltConnectable prototypes
         name = {"loader", "splitter", "transport-belt", "underground-belt"},
     }
@@ -108,7 +108,6 @@ function M.vacuum(player, item_name, item_limit)
     else
         msg = 'Vacuumed ' .. vacuumed_count .. ' of ' .. found_count .. ' ' .. q(item_name)
                   .. ' within reach'
-        player.print(found_count)
         if remaining_count > 0 then
             suffix = suffix .. '; ' .. remaining_count .. ' remaining'
         end
