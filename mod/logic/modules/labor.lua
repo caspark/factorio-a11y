@@ -14,6 +14,7 @@ local calc_production_costs_of_items = Memoize(ProductionScore.generate_price_li
 local function clear_all_tasks(player)
     Game.get_or_set_data("labor", player.index, "task_queue", true, nil)
     Game.get_or_set_data("labor", player.index, "task_pool", true, nil)
+    Game.get_or_set_data("labor", player.index, "force_rerender", true, true)
 end
 
 -- Attempt to insert an item_stack or array of item_stacks into the entity. Spill to the ground at
@@ -247,22 +248,12 @@ local function make_task_queue(player, task)
         local wait_task = {
             do_wait_time = calc_labour_delay(player, entity_name),
             do_wait_for = task.do_build_ghost,
+            do_wait_progress = 0,
         }
         table.insert(task_queue, 1, wait_task)
     end
 
     return task_queue
-end
-
-local function process_task_wait(_player, task)
-    if not Is.Number(task.do_wait_progress) then
-        task.do_wait_progress = 0
-        return {task}
-    elseif task.do_wait_progress < task.do_wait_time then
-        task.do_wait_progress = task.do_wait_progress + 1
-        return {task}
-    end
-    -- if we get here then we're done with the waiting!
 end
 
 local function process_task_build_ghost(player, task)
@@ -353,7 +344,10 @@ local function process_task(player, task)
             return {task}
         end
     elseif Is.Number(task.do_wait_time) then
-        return process_task_wait(player, task)
+        if task.do_wait_progress < task.do_wait_time then
+            task.do_wait_progress = task.do_wait_progress + 1
+            return {task}
+        end
     elseif Is.Object(task.do_build_ghost) then
         return process_task_build_ghost(player, task)
     elseif Is.Object(task.do_deconstruct_entity) then
@@ -361,6 +355,14 @@ local function process_task(player, task)
     else
         player.print("A11y Error: unknown labor task! " .. serpent.block(task))
         return {"ABORT_LABOR"}
+    end
+end
+
+local function get_primary_entity_from_task(task)
+    if Is.Object(task.do_build_ghost) then
+        return task.do_build_ghost
+    elseif Is.Object(task.do_deconstruct_entity) then
+        return task.do_deconstruct_entity
     end
 end
 
@@ -447,9 +449,6 @@ function M.render_ui(player)
     end
 
     local available_ghosts, unavailable_ghosts = find_reachable_ghosts(player)
-    -- TODO update UI rendering to use the task_queue and task_pool
-    local current_targets = Game.get_or_set_data("labor", player.index, "current_targets", false,
-                                                 nil)
 
     -- get a reference to the grid table, remove any existing drawings, then save new drawings in it
     local ui_ids = Game.get_or_set_data("labor", player.index, "ui_ids", false, {})
@@ -485,57 +484,78 @@ function M.render_ui(player)
         }
     end
 
-    if current_targets then
-        local seen_first_entity = false
-        for i, current_target in pairs(current_targets) do
-            if Is.Number(current_target) and current_target < 0 then
-                -- it's a delay, so visualize it over the real current target
-                local real_current_target = current_targets[i + 1]
-                local delay_size = calc_labour_delay(player, real_current_target.ghost_name)
-                local delay_remaining = -current_target
+    local task_queue = Game.get_or_set_data("labor", player.index, "task_queue", false, nil)
+    local task_pool = Game.get_or_set_data("labor", player.index, "task_pool", false, nil)
+
+    local primary_task_entity = nil
+    if task_queue then
+        for _, task in pairs(task_queue) do
+            if Is.Number(task.do_wait_time) then
+                -- now we need the UI to update even if the player isn't moving
+                Game.get_or_set_data("labor", player.index, "force_rerender", true, true)
+
+                local entity = task.do_wait_for
+                local delay_remaining = task.do_wait_time - task.do_wait_progress
                 ui_ids[#ui_ids + 1] = rendering.draw_arc {
                     color = defines.color.white,
                     max_radius = 0.5,
                     min_radius = 0,
                     start_angle = -math.pi / 2,
-                    angle = 2 * math.pi - (2 * math.pi * delay_remaining / delay_size),
-                    target = real_current_target,
-                    surface = player.surface,
+                    angle = 2 * math.pi - (2 * math.pi * delay_remaining / task.do_wait_time),
+                    target = entity,
+                    surface = entity.surface,
                     time_to_live = 60 * 60,
                     players = {player.index},
                     draw_on_ground = true,
                 }
-                -- now we need the UI to update even if the player isn't moving
-                Game.get_or_set_data("labor", player.index, "force_rerender", true, true)
-            elseif Is.Object(current_target) and current_target.valid then
-                if not seen_first_entity then
-                    seen_first_entity = true
-                    ui_ids[#ui_ids + 1] = rendering.draw_line {
-                        color = defines.color.white,
-                        width = 1,
-                        gap_length = 0.2,
-                        dash_length = 0.2,
-                        -- from should be the stationary thing so that the dashes don't appear to move on the line
-                        from = current_target,
-                        to = player.character,
-                        surface = player.surface,
-                        time_to_live = 60 * 60,
-                        players = {player.index},
-                        draw_on_ground = true,
-                    }
-                end
+            elseif primary_task_entity == nil then
+                primary_task_entity = get_primary_entity_from_task(task)
+            end
+        end
+    end
 
-                ui_ids[#ui_ids + 1] = rendering.draw_circle {
-                    color = defines.color.white,
-                    radius = 0.5,
+    if primary_task_entity ~= nil then
+        ui_ids[#ui_ids + 1] = rendering.draw_line {
+            color = defines.color.white,
+            width = 1,
+            gap_length = 0.2,
+            dash_length = 0.2,
+            -- from should be the stationary thing so that the dashes don't appear to move on the line
+            from = primary_task_entity,
+            to = player.character,
+            surface = player.surface,
+            time_to_live = 60 * 60,
+            players = {player.index},
+            draw_on_ground = true,
+        }
+    end
+
+    if task_pool then
+        local previous_entity = primary_task_entity
+        for i, task in ipairs(task_pool) do
+            local entity = get_primary_entity_from_task(task)
+            if entity and entity.valid then
+                ui_ids[#ui_ids + 1] = rendering.draw_line {
+                    color = defines.color.yellow,
                     width = 2,
-                    filled = false,
-                    target = current_target,
-                    surface = player.surface,
+                    from = previous_entity,
+                    to = entity,
+                    surface = previous_entity.surface,
                     time_to_live = 60 * 60,
                     players = {player.index},
                     draw_on_ground = true,
                 }
+                ui_ids[#ui_ids + 1] = rendering.draw_text {
+                    color = defines.color.yellow,
+                    text = tostring(i + 1),
+                    target = entity,
+                    surface = entity.surface,
+                    time_to_live = 60 * 60,
+                    players = {player.index},
+                    draw_on_ground = true,
+                }
+
+                previous_entity = entity
             end
         end
     end
