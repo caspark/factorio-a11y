@@ -153,7 +153,7 @@ local function calc_labour_delay(_player, entity_name)
 end
 
 -- Looks for tasks to do near the player and combines them with the given old task pool for the given
--- player; returns the sorted task pool.
+-- player; returns the (unsorted) task pool.
 local function build_new_task_pool(player, old_task_pool)
     -- make a rudimentary set of positions we've seen to avoid duplicating entities in the target list
     -- (not doing this makes it easy for the list of targets to explode to thousands of items, which
