@@ -372,8 +372,8 @@ local function render_task_queue_and_pool_ui(player)
     local task_queue = Game.get_or_set_data("labor", player.index, "task_queue", false, nil)
     local task_pool = Game.get_or_set_data("labor", player.index, "task_pool", false, nil)
 
-    local primary_task_entity = nil
     if task_queue then
+        local primary_task_entity = nil
         for _, task in pairs(task_queue) do
             if Is.Number(task.do_wait_time) then
                 -- now we need the UI to update even if the player isn't moving
@@ -393,41 +393,30 @@ local function render_task_queue_and_pool_ui(player)
                 }
             elseif primary_task_entity == nil then
                 primary_task_entity = get_primary_entity_from_task(task)
+                if primary_task_entity ~= nil then
+                    rendering.draw_line {
+                        color = defines.color.white,
+                        width = 2,
+                        gap_length = 0.2,
+                        dash_length = 0.2,
+                        -- from should be the stationary thing so that the dashes don't appear to move on the line
+                        from = primary_task_entity,
+                        to = player.character,
+                        surface = player.surface,
+                        time_to_live = 10,
+                        players = {player.index},
+                        draw_on_ground = true,
+                    }
+                    break
+                end
             end
         end
     end
 
-    if primary_task_entity ~= nil then
-        rendering.draw_line {
-            color = defines.color.white,
-            width = 1,
-            gap_length = 0.2,
-            dash_length = 0.2,
-            -- from should be the stationary thing so that the dashes don't appear to move on the line
-            from = primary_task_entity,
-            to = player.character,
-            surface = player.surface,
-            time_to_live = 10,
-            players = {player.index},
-            draw_on_ground = true,
-        }
-    end
-
     if task_pool then
-        local previous_entity = primary_task_entity
         for i, task in ipairs(task_pool) do
             local entity = get_primary_entity_from_task(task)
             if entity and entity.valid then
-                rendering.draw_line {
-                    color = defines.color.yellow,
-                    width = 2,
-                    from = previous_entity,
-                    to = entity,
-                    surface = previous_entity.surface,
-                    time_to_live = 10,
-                    players = {player.index},
-                    draw_on_ground = true,
-                }
                 rendering.draw_text {
                     color = defines.color.yellow,
                     text = tostring(i + 1),
@@ -437,8 +426,6 @@ local function render_task_queue_and_pool_ui(player)
                     players = {player.index},
                     draw_on_ground = true,
                 }
-
-                previous_entity = entity
             end
         end
     end
