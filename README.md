@@ -11,7 +11,7 @@ Paired with voice freely available voice recognition software, you can say:
 
 A11y aims to be compatible with other mods and to preserve existing gameplay mechanics; e.g. although it adds a way to move the character via the mouse cursor, rather than having the character instantly teleport from point A to point B, the character still needs to walk there along a valid path and brick/concrete still provide relevant speed boosts.
 
-Currently the mod is done enough to use for the early (pre combat) game, with new features being added regularly. **Star this repository if you're interested to help me prioritize my projects.**
+Currently the mod is done enough to use for the early game; the main thing missing is support for combat. **Star this repository if you're interested to help me prioritize my projects.**
 
 - [Factorio-A11y](#factorio-a11y)
   - [Prerequisites](#prerequisites)
